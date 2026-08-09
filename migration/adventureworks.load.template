@@ -1,0 +1,29 @@
+LOAD DATABASE
+     FROM ${MSSQL_URI}
+     INTO ${PG_URI}
+
+WITH
+     include no drop,
+     create tables,
+     create indexes,
+     reset sequences,
+     workers = 1,
+     concurrency = 1
+
+CAST
+     type hierarchyid to text drop typemod,
+     type xml to text drop typemod
+
+INCLUDING ONLY TABLE NAMES LIKE
+     'Employee',
+     'Department',
+     'Shift',
+     'JobCandidate',
+     'EmployeeDepartmentHistory',
+     'EmployeePayHistory'
+     IN SCHEMA 'HumanResources'
+
+INCLUDING ONLY TABLE NAMES LIKE
+     'BusinessEntity',
+     'Person'
+     IN SCHEMA 'Person';
