@@ -13,7 +13,7 @@ AdventureWorks trae un modelo de datos de recursos humanos completo y poblado co
 Eso genera tres problemas concretos:
 
 1. **Nadie sin conocimiento técnico puede trabajar.** Dar de alta un empleado o consultar cuánta gente hay por área requiere un desarrollador.
-2. **El historial se destruye con facilidad.** Las tablas `EmployeePayHistory` y `EmployeeDepartmentHistory` están diseñadas para *acumular* registros. Sin una capa de aplicación que lo imponga, un `UPDATE` mal hecho borra la trazabilidad de un empleado.
+2. **El historial se destruye con facilidad.** Las tablas `EmployeePayHistory` y `EmployeeDepartmentHistory` están diseñadas para _acumular_ registros. Sin una capa de aplicación que lo imponga, un `UPDATE` mal hecho borra la trazabilidad de un empleado.
 3. **Los procesos quedan a medias.** Contratar a alguien implica escribir en cinco tablas. Hecho manualmente, es fácil dejar la base inconsistente.
 
 ## La solución
@@ -29,15 +29,15 @@ Una capa de aplicación sobre la base que:
 
 ## Stack
 
-| | |
-|---|---|
-| Framework | Next.js (App Router) |
-| Lenguaje | TypeScript |
-| ORM | Prisma |
-| Base de datos | PostgreSQL |
-| Autenticación | Auth.js (credenciales) |
-| Validación | Zod |
-| Estilos | Tailwind CSS + shadcn/ui |
+|               |                          |
+| ------------- | ------------------------ |
+| Framework     | Next.js (App Router)     |
+| Lenguaje      | TypeScript               |
+| ORM           | Prisma                   |
+| Base de datos | PostgreSQL               |
+| Autenticación | Auth.js (credenciales)   |
+| Validación    | Zod                      |
+| Estilos       | Tailwind CSS + shadcn/ui |
 
 ---
 
@@ -73,26 +73,31 @@ AppUser                      Credenciales de acceso al sistema
 **Un solo rol:** administrador de RRHH. Todo detrás de login.
 
 ### Catálogos
+
 CRUD de departamentos y turnos. No se puede eliminar uno que tenga empleados asignados (ni vigentes ni históricos).
 
 ### Empleados
+
 Listado paginado con búsqueda y filtros. Ficha de detalle con datos, asignación vigente, salario actual e historiales completos. Alta, edición y baja lógica.
 
 > La edición de empleado **no incluye salario ni departamento**. Esos se cambian por sus procesos dedicados, para que siempre quede historial.
 
 ### Candidatos
+
 CRUD de aspirantes, con su currículum en texto.
 
 ### Procesos de negocio
+
 El núcleo del proyecto. Los tres son transaccionales:
 
-| Proceso | Qué hace |
-|---|---|
-| **Contratación** | Convierte un candidato en empleado: crea `BusinessEntity` → `Person` → `Employee`, registra su asignación inicial y su salario inicial, y marca el candidato como contratado. Cinco tablas, una transacción. |
-| **Cambio salarial** | Inserta una fila nueva en `EmployeePayHistory`. El salario vigente es siempre el de fecha más reciente. Nunca se sobrescribe. |
-| **Traslado** | Cierra la asignación actual poniendo su `EndDate` y abre una nueva. El empleado conserva toda su trayectoria. |
+| Proceso             | Qué hace                                                                                                                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Contratación**    | Convierte un candidato en empleado: crea `BusinessEntity` → `Person` → `Employee`, registra su asignación inicial y su salario inicial, y marca el candidato como contratado. Cinco tablas, una transacción. |
+| **Cambio salarial** | Inserta una fila nueva en `EmployeePayHistory`. El salario vigente es siempre el de fecha más reciente. Nunca se sobrescribe.                                                                                |
+| **Traslado**        | Cierra la asignación actual poniendo su `EndDate` y abre una nueva. El empleado conserva toda su trayectoria.                                                                                                |
 
 ### Reportes
+
 Headcount por departamento, distribución por turno, salario promedio por área, antigüedad del personal y estado de candidatos. Formato tabular.
 
 ---
@@ -123,12 +128,12 @@ Datos           Cliente de Prisma. Nadie más consulta la BD.
 
 ## Roadmap
 
-| Entrega | Fecha | Contenido |
-|---|---|---|
-| 1 | 12 ago | Migración de la BD, modelo Prisma, autenticación, CRUD de catálogos, despliegue |
-| 2 | 26 ago | Consulta y mantenimiento de empleados, gestión de candidatos |
-| 3 | 16 sep | Contratación, cambio salarial y traslado — los procesos transaccionales |
-| 4 | 30 sep | Reportes, estabilización y documentación |
+| Entrega | Fecha  | Contenido                                                                       |
+| ------- | ------ | ------------------------------------------------------------------------------- |
+| 1       | 12 ago | Migración de la BD, modelo Prisma, autenticación, CRUD de catálogos, despliegue |
+| 2       | 26 ago | Consulta y mantenimiento de empleados, gestión de candidatos                    |
+| 3       | 16 sep | Contratación, cambio salarial y traslado — los procesos transaccionales         |
+| 4       | 30 sep | Reportes, estabilización y documentación                                        |
 
 ---
 
