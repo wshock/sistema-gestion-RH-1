@@ -148,7 +148,10 @@ cp .env.example .env
 # Completar DATABASE_URL y el secreto de sesión
 
 # 3. Migrar los datos de AdventureWorks a PostgreSQL
-#    (ver docs/migracion.md)
+export MSSQL_URI="mssql://usuario:password@host:1433/AdventureWorks2022"
+export PG_URI="postgresql://usuario:password@host:5432/postgres"
+node migration/migrate.mjs
+# (Ver docs/migration.md para más detalles)
 
 # 4. Aplicar la migración de AppUser y crear el usuario inicial
 npx prisma migrate deploy
