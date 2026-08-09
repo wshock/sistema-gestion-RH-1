@@ -43,7 +43,8 @@ migration/
 ├── adventureworks.load.template   # plantilla del script de pgloader (versionado)
 ├── adventureworks.load            # generado en cada corrida, con credenciales reales (ignorado por git)
 ├── post_migration_constraints.sql # crea las primary/foreign keys post-carga (versionado)
-├── migrate.sh                     # orquesta todo el proceso (versionado)
+├── reset_sequences.sql            # ajusta y verifica las secuencias autoincrementales (versionado)
+├── migrate.mjs                    # orquesta todo el proceso (versionado)
 └── .gitignore                     # excluye adventureworks.load del repo
 ```
 
@@ -68,10 +69,14 @@ El script hace, en orden:
 3. Corre `post_migration_constraints.sql` contra la base destino, en un
    contenedor con el cliente `psql`, para crear las primary keys y foreign
    keys.
+4. Corre `reset_sequences.sql` contra la base destino, en un contenedor con
+   el cliente `psql`, para ajustar las secuencias autoincrementales al
+   máximo id migrado y verificar el ajuste con un insert/delete de prueba
+   por tabla (ver [Ajuste de secuencias autoincrementales](#ajuste-de-secuencias-autoincrementales)).
 
-Es seguro volver a correrlo: tanto la carga (`include no drop`) como el
-script de constraints (chequeos `IF NOT EXISTS`) son idempotentes frente a
-una base ya migrada.
+Es seguro volver a correrlo: la carga (`include no drop`), el script de
+constraints (chequeos `IF NOT EXISTS`) y el ajuste de secuencias son
+idempotentes frente a una base ya migrada.
 
 ## Por qué las constraints se crean en un paso aparte
 
@@ -86,6 +91,64 @@ explícitos y verificables.
 > `Max connections reached, increase value of TDS_MAX_CONN` en la salida de
 > pgloader. Son ruido del driver FreeTDS y no afectan el resultado —
 > `fetch meta data` reporta 0 errores incluso cuando aparecen.
+
+## Ajuste de secuencias autoincrementales
+
+`pgloader` migra los datos con `reset sequences`, que en teoría deja cada
+secuencia apuntando al máximo id migrado. En la práctica esto no es
+confiable frente a los `CAST` de tipos usados en esta migración: si una
+secuencia queda en su valor inicial (1), el primer `INSERT` real sobre esa
+tabla falla con `duplicate key value violates unique constraint`.
+
+De las 8 tablas migradas, solo 4 tienen un identificador autogenerado con
+PK de una sola columna:
+
+- `person.businessentity`
+- `humanresources.department`
+- `humanresources.shift`
+- `humanresources.jobcandidate`
+
+Las otras 4 quedan fuera: `person.person` y `humanresources.employee`
+comparten `businessentityid` como PK/FK (no es autoincremental en esa
+tabla), y `employeedepartmenthistory` / `employeepayhistory` tienen PK
+compuesta.
+
+`reset_sequences.sql` detecta automáticamente esas 4 tablas (cualquier
+tabla de `humanresources`/`person` cuya PK sea una columna respaldada por
+una secuencia, vía `pg_get_serial_sequence`), y para cada una:
+
+1. Ajusta la secuencia a `MAX(id)` de los datos migrados con `setval`.
+2. Inserta una fila de prueba (usando `DEFAULT` para el id y valores dummy
+   para el resto de columnas `NOT NULL` sin default) para confirmar que la
+   secuencia ya no colisiona con datos existentes.
+3. Elimina inmediatamente la fila de prueba insertada.
+
+Es idempotente: correrlo varias veces, con o sin datos reales adicionales
+en las tablas, no tiene efectos secundarios.
+
+Para verificar manualmente que las secuencias quedaron alineadas después de
+una corrida:
+
+```sql
+SELECT
+    'person.businessentity' AS tabla, max(businessentityid) AS max_id,
+    currval(pg_get_serial_sequence('person.businessentity', 'businessentityid')) AS seq_actual
+FROM person.businessentity
+UNION ALL
+SELECT 'humanresources.department', max(departmentid),
+    currval(pg_get_serial_sequence('humanresources.department', 'departmentid'))
+FROM humanresources.department
+UNION ALL
+SELECT 'humanresources.shift', max(shiftid),
+    currval(pg_get_serial_sequence('humanresources.shift', 'shiftid'))
+FROM humanresources.shift
+UNION ALL
+SELECT 'humanresources.jobcandidate', max(jobcandidateid),
+    currval(pg_get_serial_sequence('humanresources.jobcandidate', 'jobcandidateid'))
+FROM humanresources.jobcandidate;
+```
+
+`seq_actual` debe ser igual a `max_id` en las cuatro filas.
 
 ## Verificación post-migración
 
