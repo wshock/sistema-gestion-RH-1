@@ -98,4 +98,29 @@ if (psqlResult.status !== 0) {
   process.exit(psqlResult.status ?? 1);
 }
 
+// 4. Ajustar secuencias autoincrementales y verificar con inserts de prueba
+console.log("==> Ajustando secuencias autoincrementales (reset_sequences.sql)...");
+const sequencesResult = spawnSync(
+  "docker",
+  [
+    "run",
+    "--rm",
+    "--platform",
+    "linux/amd64",
+    "-v",
+    `${__dirname}:/migration`,
+    "postgres:16",
+    "psql",
+    PG_URI,
+    "-f",
+    "/migration/reset_sequences.sql",
+  ],
+  { stdio: "inherit" }
+);
+
+if (sequencesResult.status !== 0) {
+  console.error("Falló el ajuste de secuencias.");
+  process.exit(sequencesResult.status ?? 1);
+}
+
 console.log("==> Migración completa.");
