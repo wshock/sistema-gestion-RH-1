@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,125 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["humanresources", "person"]
+}
+
+model Department {
+  departmentId              Int                         @id(map: "pk_department_departmentid") @map("departmentid") @db.SmallInt
+  name                      String
+  groupName                 String                      @map("groupname")
+  modifiedDate              DateTime                    @default(now()) @map("modifieddate") @db.Timestamptz(6)
+  employeeDepartmentHistory EmployeeDepartmentHistory[]
+
+  @@map("department")
+  @@schema("humanresources")
+}
+
+model Employee {
+  businessEntityId          Int                         @id(map: "pk_employee_businessentityid") @map("businessentityid")
+  nationalIdNumber          String                      @map("nationalidnumber")
+  loginId                   String                      @map("loginid")
+  organizationNode          String?                     @map("organizationnode")
+  organizationLevel         Int?                        @map("organizationlevel") @db.SmallInt
+  jobTitle                  String                      @map("jobtitle")
+  birthDate                 DateTime                    @map("birthdate") @db.Date
+  maritalStatus             String                      @map("maritalstatus")
+  gender                    String
+  hireDate                  DateTime                    @map("hiredate") @db.Date
+  salariedFlag              Boolean                     @default(true) @map("salariedflag")
+  vacationHours             Int                         @default(0) @map("vacationhours") @db.SmallInt
+  sickLeaveHours            Int                         @default(0) @map("sickleavehours") @db.SmallInt
+  currentFlag               Boolean                     @default(true) @map("currentflag")
+  rowGuid                   String                      @default(dbgenerated("uuid_generate_v4()")) @map("rowguid") @db.Uuid
+  modifiedDate              DateTime                    @default(now()) @map("modifieddate") @db.Timestamptz(6)
+  person                    Person                      @relation(fields: [businessEntityId], references: [businessEntityId], onDelete: NoAction, onUpdate: NoAction, map: "fk_employee_person_businessentityid")
+  employeeDepartmentHistory EmployeeDepartmentHistory[]
+  employeePayHistory        EmployeePayHistory[]
+  jobCandidate              JobCandidate[]
+
+  @@map("employee")
+  @@schema("humanresources")
+}
+
+model EmployeeDepartmentHistory {
+  businessEntityId Int        @map("businessentityid")
+  departmentId     Int        @map("departmentid") @db.SmallInt
+  shiftId          Int        @map("shiftid") @db.SmallInt
+  startDate        DateTime   @map("startdate") @db.Date
+  endDate          DateTime?  @map("enddate") @db.Date
+  modifiedDate     DateTime   @default(now()) @map("modifieddate") @db.Timestamptz(6)
+  department       Department @relation(fields: [departmentId], references: [departmentId], onDelete: NoAction, onUpdate: NoAction, map: "fk_employeedepartmenthistory_department_departmentid")
+  employee         Employee   @relation(fields: [businessEntityId], references: [businessEntityId], onDelete: NoAction, onUpdate: NoAction, map: "fk_employeedepartmenthistory_employee_businessentityid")
+  shift            Shift      @relation(fields: [shiftId], references: [shiftId], onDelete: NoAction, onUpdate: NoAction, map: "fk_employeedepartmenthistory_shift_shiftid")
+
+  @@id([businessEntityId, startDate, departmentId, shiftId], map: "pk_employeedepartmenthistory")
+  @@map("employeedepartmenthistory")
+  @@schema("humanresources")
+}
+
+model EmployeePayHistory {
+  businessEntityId Int      @map("businessentityid")
+  rateChangeDate   DateTime @map("ratechangedate") @db.Timestamptz(6)
+  rate             Decimal  @db.Decimal
+  payFrequency     Int      @map("payfrequency") @db.SmallInt
+  modifiedDate     DateTime @default(now()) @map("modifieddate") @db.Timestamptz(6)
+  employee         Employee @relation(fields: [businessEntityId], references: [businessEntityId], onDelete: NoAction, onUpdate: NoAction, map: "fk_employeepayhistory_employee_businessentityid")
+
+  @@id([businessEntityId, rateChangeDate], map: "pk_employeepayhistory")
+  @@map("employeepayhistory")
+  @@schema("humanresources")
+}
+
+model JobCandidate {
+  jobCandidateId   Int       @id(map: "pk_jobcandidate_jobcandidateid") @map("jobcandidateid")
+  businessEntityId Int?      @map("businessentityid")
+  resume           String?
+  modifiedDate     DateTime  @default(now()) @map("modifieddate") @db.Timestamptz(6)
+  employee         Employee? @relation(fields: [businessEntityId], references: [businessEntityId], onDelete: NoAction, onUpdate: NoAction, map: "fk_jobcandidate_employee_businessentityid")
+
+  @@map("jobcandidate")
+  @@schema("humanresources")
+}
+
+model Shift {
+  shiftId                   Int                         @id(map: "pk_shift_shiftid") @map("shiftid") @db.SmallInt
+  name                      String
+  startTime                 DateTime                    @map("starttime") @db.Time(6)
+  endTime                   DateTime                    @map("endtime") @db.Time(6)
+  modifiedDate              DateTime                    @default(now()) @map("modifieddate") @db.Timestamptz(6)
+  employeeDepartmentHistory EmployeeDepartmentHistory[]
+
+  @@map("shift")
+  @@schema("humanresources")
+}
+
+model BusinessEntity {
+  businessEntityId Int      @id(map: "pk_businessentity_businessentityid") @map("businessentityid")
+  rowGuid          String   @default(dbgenerated("uuid_generate_v4()")) @map("rowguid") @db.Uuid
+  modifiedDate     DateTime @default(now()) @map("modifieddate") @db.Timestamptz(6)
+  person           Person?
+
+  @@map("businessentity")
+  @@schema("person")
+}
+
+model Person {
+  businessEntityId      Int            @id(map: "pk_person_businessentityid") @map("businessentityid")
+  personType            String         @map("persontype")
+  nameStyle             Boolean        @default(false) @map("namestyle")
+  title                 String?
+  firstName             String         @map("firstname")
+  middleName            String?        @map("middlename")
+  lastName              String         @map("lastname")
+  suffix                String?
+  emailPromotion        Int            @default(0) @map("emailpromotion")
+  additionalContactInfo String?        @map("additionalcontactinfo")
+  demographics          String?
+  rowGuid               String         @default(dbgenerated("uuid_generate_v4()")) @map("rowguid") @db.Uuid
+  modifiedDate          DateTime       @default(now()) @map("modifieddate") @db.Timestamptz(6)
+  employee              Employee?
+  businessEntity        BusinessEntity @relation(fields: [businessEntityId], references: [businessEntityId], onDelete: NoAction, onUpdate: NoAction, map: "fk_person_businessentity_businessentityid")
+
+  @@map("person")
+  @@schema("person")
 }
