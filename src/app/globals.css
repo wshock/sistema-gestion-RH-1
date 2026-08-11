@@ -126,5 +126,12 @@
   }
   html {
     @apply font-sans;
+    /* Sin esto, los controles que pinta el navegador —el reloj de
+       `input[type=time]`, los calendarios, las barras de desplazamiento—
+       se quedan en claro cuando el resto de la aplicación está en oscuro. */
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
 }

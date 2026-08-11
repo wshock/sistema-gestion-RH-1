@@ -9,14 +9,26 @@ import { Input } from "@/components/ui/input";
 const RETARDO_MS = 300;
 
 /**
- * Buscador de departamentos.
+ * Buscador de listados.
  *
  * El término vive en la URL, no en estado de React: así el filtro se puede
  * compartir por enlace, sobrevive al botón atrás y el filtrado real ocurre en
  * el servidor. El estado local existe solo para que el input responda mientras
  * se espera el retardo.
+ *
+ * No conoce el módulo en el que se usa: escribe en el parámetro `q` de la ruta
+ * actual, sea cual sea.
  */
-export function DepartmentSearch({ valorInicial }: { valorInicial: string }) {
+export function SearchInput({
+  valorInicial,
+  placeholder = "Buscar…",
+  etiqueta,
+}: {
+  valorInicial: string;
+  placeholder?: string;
+  /** Texto para lectores de pantalla, p. ej. "Buscar turnos por nombre". */
+  etiqueta: string;
+}) {
   const [texto, setTexto] = useState(valorInicial);
   const [pendiente, iniciarTransicion] = useTransition();
   const router = useRouter();
@@ -54,8 +66,8 @@ export function DepartmentSearch({ valorInicial }: { valorInicial: string }) {
         type="search"
         value={texto}
         onChange={(evento) => setTexto(evento.target.value)}
-        placeholder="Buscar por nombre…"
-        aria-label="Buscar departamentos por nombre"
+        placeholder={placeholder}
+        aria-label={etiqueta}
         className="pl-8"
       />
       {pendiente && (

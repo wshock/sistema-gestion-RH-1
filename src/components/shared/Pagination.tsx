@@ -6,32 +6,47 @@ import { Button } from "@/components/ui/button";
 /**
  * Paginador sin JavaScript de cliente: son enlaces normales que cambian la
  * URL, y el servidor responde con la página pedida.
+ *
+ * Recibe la ruta y los parámetros a conservar en lugar de conocerlos, de modo
+ * que sirve igual para cualquier listado.
  */
-export function DepartmentPagination({
+export function Pagination({
   page,
   pageCount,
   total,
-  q,
+  basePath,
+  params = {},
+  singular,
+  plural,
 }: {
   page: number;
   pageCount: number;
   total: number;
-  q: string;
+  /** Ruta del listado, p. ej. "/turnos". */
+  basePath: string;
+  /** Parámetros que deben sobrevivir al cambio de página; los vacíos se omiten. */
+  params?: Record<string, string | undefined>;
+  singular: string;
+  plural: string;
 }) {
   function enlaceA(pagina: number): string {
-    const params = new URLSearchParams();
+    const busqueda = new URLSearchParams();
 
-    if (q) {
-      params.set("q", q);
+    for (const [clave, valor] of Object.entries(params)) {
+      if (valor) {
+        busqueda.set(clave, valor);
+      }
     }
 
+    // La página 1 se omite para que la URL canónica del listado sea la ruta
+    // limpia, sin `?page=1`.
     if (pagina > 1) {
-      params.set("page", String(pagina));
+      busqueda.set("page", String(pagina));
     }
 
-    const consulta = params.toString();
+    const consulta = busqueda.toString();
 
-    return consulta ? `/departamentos?${consulta}` : "/departamentos";
+    return consulta ? `${basePath}?${consulta}` : basePath;
   }
 
   const hayAnterior = page > 1;
@@ -42,7 +57,7 @@ export function DepartmentPagination({
       <p className="text-muted-foreground text-sm">
         {total === 0
           ? "Sin resultados"
-          : `Página ${page} de ${pageCount} · ${total} ${total === 1 ? "departamento" : "departamentos"}`}
+          : `Página ${page} de ${pageCount} · ${total} ${total === 1 ? singular : plural}`}
       </p>
 
       <div className="flex items-center gap-1.5">
