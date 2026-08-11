@@ -15,10 +15,18 @@ src/
   data/         Datos — cliente de Prisma, único punto de acceso a la BD
   schemas/      Esquemas de Zod compartidos entre cliente y servidor
   lib/          Utilidades transversales sin capa propia
+  config/       Constantes de configuración (navegación, límites)
+  proxy.ts      Chequeo optimista de sesión previo a cada navegación
 prisma/         Schema y migraciones de Prisma
 ```
 
 Cada carpeta de capa tiene su propio `README.md` con las reglas específicas que debe cumplir su código.
+
+> **Evolución prevista.** A partir de la entrega 2 la estructura pasa a ser
+> **feature-based con capas ligeras**: `src/features/<módulo>/{components,actions,services,data,schemas}`,
+> creando dentro de cada módulo solo las capas que necesite. Las cuatro capas y
+> sus reglas no cambian; cambia el criterio de agrupación, de tipo de archivo a
+> módulo de dominio. Se pospuso para no refactorizar en vísperas de la entrega 1.
 
 ---
 
@@ -99,3 +107,6 @@ Ver el diagrama completo en el [README](./README.md#arquitectura).
 - Los esquemas de Zod se definen una vez en `src/schemas` y se comparten entre cliente y servidor.
 - La validación de servidor en las Server Actions es obligatoria, independiente de la del cliente.
 - Los registros de historial (`EmployeePayHistory`, `EmployeeDepartmentHistory`) se insertan, nunca se actualizan ni se borran.
+- Todo lo que cruza de servicios a presentación viaja como `Result<T>` (`src/lib/result.ts`): la UI nunca recibe una excepción de Prisma. Los fallos previstos llevan código de negocio; los inesperados se registran en el servidor y llegan al usuario como mensaje genérico.
+- Cada Server Action y cada página comprueban la sesión por su cuenta. `proxy.ts` solo hace un chequeo optimista de la cookie y los layouts no se re-renderizan al navegar, así que ninguno de los dos sirve como control de acceso.
+- Filtros, paginación y orden viven en la URL (`searchParams`), no en estado de cliente: así el listado se puede compartir por enlace y el filtrado ocurre en el servidor.
