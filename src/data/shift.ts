@@ -1,4 +1,5 @@
 import { prisma } from "@/data/prisma";
+import type { ConteoAsignaciones } from "@/lib/referencias";
 import type { ShiftInput } from "@/schemas/shift.schema";
 
 /**
@@ -179,6 +180,17 @@ export function deleteShift(shiftId: number) {
  * key que ya impediría el borrado, pero consultarla antes permite devolver un
  * error de negocio comprensible en vez de una violación de constraint.
  */
-export function countShiftAssignments(shiftId: number) {
-  return prisma.employeeDepartmentHistory.count({ where: { shiftId } });
+export async function countShiftAssignments(
+  shiftId: number,
+): Promise<ConteoAsignaciones> {
+  // `enddate IS NULL` es lo que distingue una asignación abierta de una
+  // cerrada; se cuentan las dos en una sola pasada con FILTER.
+  const filas = await prisma.$queryRaw<ConteoAsignaciones[]>`
+    SELECT count(*) FILTER (WHERE enddate IS NULL)::int     AS "vigentes",
+           count(*) FILTER (WHERE enddate IS NOT NULL)::int AS "historicas"
+    FROM humanresources.employeedepartmenthistory
+    WHERE shiftid = ${shiftId}
+  `;
+
+  return filas[0] ?? { vigentes: 0, historicas: 0 };
 }
