@@ -4,27 +4,36 @@
 -- Se ejecuta DESPUÉS de la carga de datos con pgloader y de aplicar las
 -- constraints (post_migration_constraints.sql).
 --
--- pgloader (opción `reset sequences`) debería dejar las secuencias de las
--- columnas autoincrementales apuntando al máximo id migrado, pero esto no
--- es completamente confiable frente a los `CAST` de tipos usados en esta
--- migración. Si la secuencia queda en su valor inicial, el primer INSERT
--- real sobre esa tabla falla con "duplicate key value violates unique
--- constraint".
+-- PROBLEMA QUE RESUELVE
+-- En AdventureWorks (SQL Server) varias primary keys son columnas
+-- IDENTITY: DepartmentID, ShiftID, JobCandidateID y BusinessEntityID.
+-- pgloader copia los valores pero NO traslada la propiedad de
+-- autogeneración: las columnas quedan como enteros normales, sin
+-- secuencia ni identity. El resultado es que cualquier INSERT que no
+-- especifique la primary key falla con "null value in column ...
+-- violates not-null constraint", lo que impide crear registros desde la
+-- aplicación.
 --
--- Este script:
---   1. Detecta automáticamente todas las tablas de los esquemas
---      `humanresources` y `person` cuya primary key es una sola columna
---      respaldada por una secuencia (es decir, columnas autogeneradas:
---      businessentity, department, shift, jobcandidate).
---   2. Ajusta cada secuencia a MAX(id) de los datos migrados (o la deja en
---      su valor inicial si la tabla está vacía).
---   3. Verifica el ajuste con un INSERT de prueba por tabla (usando
---      DEFAULT para la columna autogenerada y valores dummy para el resto
---      de columnas NOT NULL sin default, según su tipo de dato).
---   4. Elimina cada registro de prueba insertado, sin dejar rastro.
+-- La opción `reset sequences` de pgloader tampoco ayuda, porque no hay
+-- secuencias que reajustar.
 --
--- Es idempotente: se puede ejecutar tantas veces como sea necesario, antes
--- o después de tener datos reales en las tablas.
+-- QUÉ HACE ESTE SCRIPT
+--   1. Detecta las tablas de `humanresources` y `person` cuya primary
+--      key es una sola columna entera que NO es a la vez foreign key
+--      (esas son las verdaderas columnas autogeneradas: department,
+--      shift, jobcandidate, businessentity; quedan excluidas employee y
+--      person, cuya PK es además FK hacia otra tabla).
+--   2. Si a la columna le falta la identity, se la añade como GENERATED
+--      BY DEFAULT (no ALWAYS, para no romper cargas que sí traen id
+--      explícito), arrancando en MAX(id) + 1.
+--   3. Si ya tenía secuencia, la reajusta a MAX(id).
+--   4. Verifica con un INSERT de prueba por tabla, usando DEFAULT en la
+--      columna autogenerada y valores dummy en el resto de columnas
+--      NOT NULL sin default.
+--   5. Elimina cada registro de prueba, sin dejar rastro.
+--
+-- Es idempotente: se puede ejecutar tantas veces como sea necesario,
+-- antes o después de tener datos reales en las tablas.
 -- =====================================================================
 
 DO $$
@@ -41,9 +50,10 @@ DECLARE
 BEGIN
     FOR tbl IN
         SELECT
-            n.nspname AS schema_name,
-            c.relname AS table_name,
-            a.attname AS pk_column
+            n.nspname       AS schema_name,
+            c.relname       AS table_name,
+            a.attname       AS pk_column,
+            a.attidentity   AS identity_kind
         FROM pg_constraint con
         JOIN pg_class c ON c.oid = con.conrelid
         JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -52,32 +62,58 @@ BEGIN
         WHERE con.contype = 'p'
           AND array_length(con.conkey, 1) = 1
           AND n.nspname IN ('humanresources', 'person')
-          AND pg_get_serial_sequence(
-                  n.nspname || '.' || c.relname, a.attname
-              ) IS NOT NULL
+          -- Solo columnas enteras: son las candidatas a autogenerarse.
+          AND a.atttypid IN ('int2'::regtype, 'int4'::regtype, 'int8'::regtype)
+          -- Excluye las PK que además son FK (employee, person): su valor
+          -- viene de la tabla padre, no se autogenera.
+          AND NOT EXISTS (
+              SELECT 1
+              FROM pg_constraint fk
+              WHERE fk.conrelid = c.oid
+                AND fk.contype = 'f'
+                AND a.attnum = ANY (fk.conkey)
+          )
         ORDER BY n.nspname, c.relname
     LOOP
         BEGIN
-            seq_name := pg_get_serial_sequence(
-                tbl.schema_name || '.' || tbl.table_name, tbl.pk_column
-            );
-
-            -- 1. Ajustar la secuencia al máximo id existente
             EXECUTE format(
                 'SELECT max(%I) FROM %I.%I',
                 tbl.pk_column, tbl.schema_name, tbl.table_name
             ) INTO max_id;
 
-            IF max_id IS NULL THEN
-                PERFORM setval(seq_name, 1, false);
+            seq_name := pg_get_serial_sequence(
+                tbl.schema_name || '.' || tbl.table_name, tbl.pk_column
+            );
+
+            IF tbl.identity_kind = '' AND seq_name IS NULL THEN
+                -- 1. Falta la autogeneración: crearla arrancando en max + 1.
+                EXECUTE format(
+                    'ALTER TABLE %I.%I ALTER COLUMN %I '
+                    'ADD GENERATED BY DEFAULT AS IDENTITY (START WITH %s)',
+                    tbl.schema_name, tbl.table_name, tbl.pk_column,
+                    COALESCE(max_id, 0) + 1
+                );
+
+                RAISE NOTICE 'Identity creada en %.%.% (arranca en %)',
+                    tbl.schema_name, tbl.table_name, tbl.pk_column,
+                    COALESCE(max_id, 0) + 1;
             ELSE
-                PERFORM setval(seq_name, max_id, true);
+                -- 2. Ya existe: solo reajustar al máximo id migrado.
+                seq_name := pg_get_serial_sequence(
+                    tbl.schema_name || '.' || tbl.table_name, tbl.pk_column
+                );
+
+                IF max_id IS NULL THEN
+                    PERFORM setval(seq_name, 1, false);
+                ELSE
+                    PERFORM setval(seq_name, max_id, true);
+                END IF;
+
+                RAISE NOTICE 'Secuencia % reajustada (max id = %)',
+                    seq_name, COALESCE(max_id, 0);
             END IF;
 
-            RAISE NOTICE 'Secuencia % ajustada (max id = %)',
-                seq_name, COALESCE(max_id, 0);
-
-            -- 2. Armar un INSERT de prueba: DEFAULT en la columna
+            -- 3. Armar un INSERT de prueba: DEFAULT en la columna
             --    autogenerada + valores dummy en columnas NOT NULL sin
             --    default, según su tipo de dato.
             insert_cols := '';
@@ -132,7 +168,7 @@ BEGIN
                 insert_vals := left(insert_vals, length(insert_vals) - 2);
             END IF;
 
-            -- 3. Insertar el registro de prueba
+            -- 4. Insertar el registro de prueba
             IF insert_cols = '' THEN
                 EXECUTE format(
                     'INSERT INTO %I.%I DEFAULT VALUES RETURNING %I',
@@ -149,7 +185,7 @@ BEGIN
             RAISE NOTICE 'Inserción de prueba en %.% exitosa (id = %)',
                 tbl.schema_name, tbl.table_name, new_id;
 
-            -- 4. Eliminar el registro de prueba
+            -- 5. Eliminar el registro de prueba
             EXECUTE format(
                 'DELETE FROM %I.%I WHERE %I = %L',
                 tbl.schema_name, tbl.table_name, tbl.pk_column, new_id
@@ -165,6 +201,6 @@ BEGIN
         END;
     END LOOP;
 
-    RAISE NOTICE 'Ajuste de secuencias completo. Tablas procesadas: %',
+    RAISE NOTICE 'Ajuste de autogeneración completo. Tablas procesadas: %',
         tablas_procesadas;
 END $$;

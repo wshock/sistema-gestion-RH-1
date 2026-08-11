@@ -65,7 +65,7 @@ const pgloaderResult = spawnSync(
     "pgloader",
     "/migration/adventureworks.load",
   ],
-  { stdio: "inherit" }
+  { stdio: "inherit" },
 );
 
 if (pgloaderResult.status !== 0) {
@@ -74,7 +74,9 @@ if (pgloaderResult.status !== 0) {
 }
 
 // 3. Aplicar primary keys y foreign keys
-console.log("==> Aplicando primary keys y foreign keys (post_migration_constraints.sql)...");
+console.log(
+  "==> Aplicando primary keys y foreign keys (post_migration_constraints.sql)...",
+);
 const psqlResult = spawnSync(
   "docker",
   [
@@ -90,7 +92,7 @@ const psqlResult = spawnSync(
     "-f",
     "/migration/post_migration_constraints.sql",
   ],
-  { stdio: "inherit" }
+  { stdio: "inherit" },
 );
 
 if (psqlResult.status !== 0) {
@@ -115,7 +117,7 @@ const sequencesResult = spawnSync(
     "-f",
     "/migration/reset_sequences.sql",
   ],
-  { stdio: "inherit" }
+  { stdio: "inherit" },
 );
 
 if (sequencesResult.status !== 0) {

@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Department {
-  departmentId              Int                         @id(map: "pk_department_departmentid") @map("departmentid") @db.SmallInt
+  departmentId              Int                         @id(map: "pk_department_departmentid") @default(autoincrement()) @map("departmentid") @db.SmallInt
   name                      String
   groupName                 String                      @map("groupname")
   modifiedDate              DateTime                    @default(now()) @map("modifieddate") @db.Timestamptz(6)
@@ -75,7 +75,7 @@ model EmployeePayHistory {
 }
 
 model JobCandidate {
-  jobCandidateId   Int       @id(map: "pk_jobcandidate_jobcandidateid") @map("jobcandidateid")
+  jobCandidateId   Int       @id(map: "pk_jobcandidate_jobcandidateid") @default(autoincrement()) @map("jobcandidateid")
   businessEntityId Int?      @map("businessentityid")
   resume           String?
   modifiedDate     DateTime  @default(now()) @map("modifieddate") @db.Timestamptz(6)
@@ -86,7 +86,7 @@ model JobCandidate {
 }
 
 model Shift {
-  shiftId                   Int                         @id(map: "pk_shift_shiftid") @map("shiftid") @db.SmallInt
+  shiftId                   Int                         @id(map: "pk_shift_shiftid") @default(autoincrement()) @map("shiftid") @db.SmallInt
   name                      String
   startTime                 DateTime                    @map("starttime") @db.Time(6)
   endTime                   DateTime                    @map("endtime") @db.Time(6)
@@ -98,7 +98,7 @@ model Shift {
 }
 
 model BusinessEntity {
-  businessEntityId Int      @id(map: "pk_businessentity_businessentityid") @map("businessentityid")
+  businessEntityId Int      @id(map: "pk_businessentity_businessentityid") @default(autoincrement()) @map("businessentityid")
   rowGuid          String   @default(dbgenerated("uuid_generate_v4()")) @map("rowguid") @db.Uuid
   modifiedDate     DateTime @default(now()) @map("modifieddate") @db.Timestamptz(6)
   person           Person?
