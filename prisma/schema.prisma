@@ -5,7 +5,21 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["humanresources", "person"]
+  schemas  = ["app", "humanresources", "person"]
+}
+
+/// Usuarios del sistema. Tabla propia del equipo, no heredada de
+/// AdventureWorks: vive en el esquema `app` y se crea por migración de Prisma.
+model AppUser {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("app_user")
+  @@schema("app")
 }
 
 model Department {
