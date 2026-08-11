@@ -139,27 +139,57 @@ Datos           Cliente de Prisma. Nadie más consulta la BD.
 
 ## Puesta en marcha
 
+> **El equipo comparte una única base en Supabase**, ya migrada y con el
+> usuario administrador creado. Si te estás incorporando al proyecto,
+> **no vuelvas a correr `migration/migrate.mjs` ni `npm run seed`**: eso
+> ya se hizo una vez contra esa base. Pedile a un integrante del equipo
+> la cadena de conexión real (`DATABASE_URL`) por un canal seguro —nunca
+> por git ni por chat en texto plano, `.env` está en `.gitignore` a
+> propósito— y usá los pasos 1, 2 y 4 de abajo. Los pasos 3 y 5 son solo
+> para levantar una base nueva desde cero (por ejemplo, en un entorno de
+> pruebas separado).
+
 ```bash
-# 1. Dependencias
+# 1. Dependencias (dispara `prisma generate` vía postinstall)
 npm install
 
 # 2. Variables de entorno
 cp .env.example .env
-# Completar DATABASE_URL y el secreto de sesión
+# DATABASE_URL: pedir la cadena de conexión real de Supabase a otro
+# integrante del equipo. No inventar una conexión local: es una base
+# compartida, ya migrada.
+#
+# AUTH_SECRET: cada desarrollador genera el suyo, no necesita coincidir
+# con el de nadie más porque solo firma las cookies de su propio
+# servidor local. No puede quedar vacío o Auth.js responde 500
+# (MissingSecret) en todo el flujo de sesión:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+# Si se cambia una variable con el servidor levantado, hay que reiniciarlo y
+# borrar .next: Turbopack cachea el valor anterior en los chunks compilados.
+#
+# SEED_ADMIN_*: no hace falta completarlos con datos reales si no vas a
+# correr `npm run seed` (el admin ya existe en la base compartida).
 
-# 3. Migrar los datos de AdventureWorks a PostgreSQL
+# 3. [Solo para una base nueva, no para unirse a la compartida] Migrar
+#    los datos de AdventureWorks a PostgreSQL
 export MSSQL_URI="mssql://usuario:password@host:1433/AdventureWorks2022"
 export PG_URI="postgresql://usuario:password@host:5432/postgres"
 node migration/migrate.mjs
 # (Ver docs/migration.md para más detalles)
 
-# 4. Aplicar la migración de AppUser y crear el usuario inicial
+# 4. Aplicar migraciones de Prisma pendientes (seguro incluso si ya están
+#    todas aplicadas: Prisma lleva el registro en `_prisma_migrations` y
+#    no repite las que ya corrieron)
 npx prisma migrate deploy
+
+# 5. [Solo para una base nueva] Crear el usuario administrador inicial
 npm run seed
 
-# 5. Levantar
+# 6. Levantar
 npm run dev
 ```
+
+Los pasos 3-5 son independientes entre sí: la migración de Prisma solo crea el esquema `app`, nunca toca las tablas de AdventureWorks (ver [`src/data/README.md`](./src/data/README.md)). Ya con el usuario creado, el acceso es por `/login`.
 
 ---
 
