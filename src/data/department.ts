@@ -1,4 +1,5 @@
 import { prisma } from "@/data/prisma";
+import type { ConteoAsignaciones } from "@/lib/referencias";
 import type { DepartmentInput } from "@/schemas/department.schema";
 
 /**
@@ -113,6 +114,17 @@ export function deleteDepartment(departmentId: number) {
  * key que ya impediría el borrado, pero consultarla antes permite devolver un
  * error de negocio comprensible en vez de una violación de constraint.
  */
-export function countDepartmentAssignments(departmentId: number) {
-  return prisma.employeeDepartmentHistory.count({ where: { departmentId } });
+export async function countDepartmentAssignments(
+  departmentId: number,
+): Promise<ConteoAsignaciones> {
+  // `enddate IS NULL` es lo que distingue una asignación abierta de una
+  // cerrada; se cuentan las dos en una sola pasada con FILTER.
+  const filas = await prisma.$queryRaw<ConteoAsignaciones[]>`
+    SELECT count(*) FILTER (WHERE enddate IS NULL)::int     AS "vigentes",
+           count(*) FILTER (WHERE enddate IS NOT NULL)::int AS "historicas"
+    FROM humanresources.employeedepartmenthistory
+    WHERE departmentid = ${departmentId}
+  `;
+
+  return filas[0] ?? { vigentes: 0, historicas: 0 };
 }

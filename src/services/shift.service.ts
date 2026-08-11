@@ -1,5 +1,6 @@
 import * as shiftData from "@/data/shift";
 import type { ShiftRow } from "@/data/shift";
+import { mensajeDeBloqueo, totalAsignaciones } from "@/lib/referencias";
 import { fail, ok, unexpected, type Result } from "@/lib/result";
 import { TAMANO_PAGINA, type ShiftInput, type ShiftQuery } from "@/schemas/shift.schema";
 
@@ -95,15 +96,13 @@ export async function deleteShift(shiftId: number): Promise<Result<null>> {
       return fail("NO_ENCONTRADO", "El turno que intentás eliminar ya no existe.");
     }
 
+    // La comprobación va antes del borrado, no se deduce de un fallo de la
+    // base: solo así se puede explicar el motivo en términos de negocio en
+    // lugar de traducir una violación de clave foránea.
     const asignaciones = await shiftData.countShiftAssignments(shiftId);
 
-    if (asignaciones > 0) {
-      return fail(
-        "CONFLICTO",
-        `No se puede eliminar "${actual.name}": tiene ${asignaciones} ${
-          asignaciones === 1 ? "asignación" : "asignaciones"
-        } de empleados en su historial.`,
-      );
+    if (totalAsignaciones(asignaciones) > 0) {
+      return fail("CONFLICTO", mensajeDeBloqueo("turno", actual.name, asignaciones));
     }
 
     await shiftData.deleteShift(shiftId);

@@ -1,5 +1,6 @@
 import * as departmentData from "@/data/department";
 import type { DepartmentRow } from "@/data/department";
+import { mensajeDeBloqueo, totalAsignaciones } from "@/lib/referencias";
 import { fail, ok, unexpected, type Result } from "@/lib/result";
 import {
   TAMANO_PAGINA,
@@ -100,14 +101,15 @@ export async function deleteDepartment(departmentId: number): Promise<Result<nul
       return fail("NO_ENCONTRADO", "El departamento que intentás eliminar ya no existe.");
     }
 
+    // La comprobación va antes del borrado, no se deduce de un fallo de la
+    // base: solo así se puede explicar el motivo en términos de negocio en
+    // lugar de traducir una violación de clave foránea.
     const asignaciones = await departmentData.countDepartmentAssignments(departmentId);
 
-    if (asignaciones > 0) {
+    if (totalAsignaciones(asignaciones) > 0) {
       return fail(
         "CONFLICTO",
-        `No se puede eliminar "${actual.name}": tiene ${asignaciones} ${
-          asignaciones === 1 ? "asignación" : "asignaciones"
-        } de empleados en su historial.`,
+        mensajeDeBloqueo("departamento", actual.name, asignaciones),
       );
     }
 
