@@ -4,6 +4,8 @@ Aplicación web para administrar la información de personal de **AdventureWorks
 
 Proyecto académico. Equipo de 2 desarrolladores. Agosto – septiembre de 2026.
 
+**URL de producción:** _pendiente de primer despliegue_ — se actualizará aquí en cuanto el proyecto quede desplegado en Vercel.
+
 ---
 
 ## El problema
@@ -190,6 +192,17 @@ npm run dev
 ```
 
 Los pasos 3-5 son independientes entre sí: la migración de Prisma solo crea el esquema `app`, nunca toca las tablas de AdventureWorks (ver [`src/data/README.md`](./src/data/README.md)). Ya con el usuario creado, el acceso es por `/login`.
+
+---
+
+## Despliegue
+
+La aplicación se despliega en **Vercel**, conectado directamente al repositorio de GitHub.
+
+- **Producción:** cada push/merge a `main` dispara automáticamente un nuevo despliegue de producción.
+- **Preview:** cada pull request recibe su propio despliegue de preview con una URL única, útil para revisar una entrega antes de mergear.
+- Las variables de entorno (`DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`) se configuran en Vercel → Project Settings → Environment Variables, nunca en el repositorio.
+- La base de datos PostgreSQL es un servicio externo administrado (fuera de Vercel); solo su cadena de conexión vive en `DATABASE_URL`.
 
 ---
 
