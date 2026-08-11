@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import { AlertCircleIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { DeleteDepartmentDialog } from "@/components/departments/DeleteDepartmentDialog";
 import { DepartmentFormDialog } from "@/components/departments/DepartmentFormDialog";
 import { DepartmentPagination } from "@/components/departments/DepartmentPagination";
 import { DepartmentSearch } from "@/components/departments/DepartmentSearch";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type { DepartmentRow } from "@/data/department";
 import { requireSessionUser } from "@/lib/session";
 import { departmentQuerySchema } from "@/schemas/department.schema";
 import { getDepartmentPage } from "@/services/department.service";
@@ -40,18 +34,65 @@ export default async function DepartamentosPage({
   const query = departmentQuerySchema.parse({ q: params.q, page: params.page });
   const resultado = await getDepartmentPage(query);
 
-  if (!resultado.success) {
-    return (
-      <Card className="bg-card/60 backdrop-blur-xl">
-        <CardContent className="text-muted-foreground flex items-center gap-2 py-8 text-sm">
-          <AlertCircleIcon className="text-destructive size-4 shrink-0" />
-          {resultado.error.message}
-        </CardContent>
-      </Card>
-    );
-  }
+  // El fallo se pinta dentro de la propia tabla, no en lugar de la página: la
+  // cabecera y el buscador siguen ahí para poder reintentar.
+  const { items, total, page, pageCount } = resultado.success
+    ? resultado.data
+    : { items: [], total: 0, page: 1, pageCount: 1 };
 
-  const { items, total, page, pageCount } = resultado.data;
+  const columnas: DataTableColumn<DepartmentRow>[] = [
+    {
+      id: "name",
+      header: "Nombre",
+      cell: (departamento) => <span className="font-medium">{departamento.name}</span>,
+    },
+    {
+      id: "groupName",
+      header: "Grupo",
+      className: "text-muted-foreground",
+      cell: (departamento) => departamento.groupName,
+    },
+    {
+      id: "modifiedDate",
+      header: "Modificado",
+      className: "text-muted-foreground hidden sm:table-cell",
+      cell: (departamento) => formatoFecha.format(departamento.modifiedDate),
+    },
+    {
+      id: "acciones",
+      header: "Acciones",
+      className: "w-0 text-right",
+      cell: (departamento) => (
+        <div className="flex justify-end gap-1">
+          <DepartmentFormDialog
+            departamento={departamento}
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Editar ${departamento.name}`}
+              >
+                <PencilIcon />
+              </Button>
+            }
+          />
+          <DeleteDepartmentDialog
+            departmentId={departamento.departmentId}
+            name={departamento.name}
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Eliminar ${departamento.name}`}
+              >
+                <Trash2Icon />
+              </Button>
+            }
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -79,71 +120,17 @@ export default async function DepartamentosPage({
 
       <Card className="bg-card/60 overflow-hidden backdrop-blur-xl">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Grupo</TableHead>
-                <TableHead className="hidden sm:table-cell">Modificado</TableHead>
-                <TableHead className="w-0 text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-muted-foreground py-10 text-center"
-                  >
-                    {query.q
-                      ? `No hay departamentos que coincidan con "${query.q}".`
-                      : "Todavía no hay departamentos registrados."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                items.map((departamento) => (
-                  <TableRow key={departamento.departmentId}>
-                    <TableCell className="font-medium">{departamento.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {departamento.groupName}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden sm:table-cell">
-                      {formatoFecha.format(departamento.modifiedDate)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <DepartmentFormDialog
-                          departamento={departamento}
-                          trigger={
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label={`Editar ${departamento.name}`}
-                            >
-                              <PencilIcon />
-                            </Button>
-                          }
-                        />
-                        <DeleteDepartmentDialog
-                          departmentId={departamento.departmentId}
-                          name={departamento.name}
-                          trigger={
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label={`Eliminar ${departamento.name}`}
-                            >
-                              <Trash2Icon />
-                            </Button>
-                          }
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <DataTable
+            columnas={columnas}
+            filas={items}
+            idDeFila={(departamento) => departamento.departmentId}
+            error={resultado.success ? undefined : resultado.error.message}
+            vacio={
+              query.q
+                ? `No hay departamentos que coincidan con "${query.q}".`
+                : "Todavía no hay departamentos registrados."
+            }
+          />
         </CardContent>
       </Card>
 

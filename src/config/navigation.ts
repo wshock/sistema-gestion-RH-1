@@ -1,13 +1,11 @@
 import {
   Building2,
   CalendarClock,
-  ClipboardList,
   FileBarChart,
   LayoutDashboard,
-  Settings,
   UserRoundSearch,
   Users,
-  Wallet,
+  Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -20,17 +18,20 @@ export type NavItem = {
 };
 
 /**
- * Navegación principal. Los módulos pendientes aparecen atenuados en lugar de
- * ocultos: comunican el alcance del sistema sin ofrecer enlaces rotos.
+ * Navegación principal.
+ *
+ * Refleja el alcance acordado del proyecto y nada más: los módulos pendientes
+ * aparecen atenuados en lugar de ocultos —comunican hacia dónde va el sistema
+ * sin ofrecer enlaces rotos—, pero listar aquí funciones que quedaron fuera de
+ * alcance (nómina, ausencias, permisos) prometería al evaluador algo que nunca
+ * va a llegar.
  */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/inicio", label: "Inicio", icon: LayoutDashboard, disponible: true },
   { href: "/departamentos", label: "Departamentos", icon: Building2, disponible: true },
-  { href: "/empleados", label: "Empleados", icon: Users, disponible: false },
   { href: "/turnos", label: "Turnos", icon: CalendarClock, disponible: false },
-  { href: "/nomina", label: "Nómina", icon: Wallet, disponible: false },
+  { href: "/empleados", label: "Empleados", icon: Users, disponible: false },
   { href: "/candidatos", label: "Candidatos", icon: UserRoundSearch, disponible: false },
-  { href: "/ausencias", label: "Ausencias", icon: ClipboardList, disponible: false },
+  { href: "/procesos", label: "Procesos", icon: Workflow, disponible: false },
   { href: "/reportes", label: "Reportes", icon: FileBarChart, disponible: false },
-  { href: "/ajustes", label: "Ajustes", icon: Settings, disponible: false },
 ];

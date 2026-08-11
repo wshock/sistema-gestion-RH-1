@@ -2,24 +2,13 @@
 
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircleIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { createDepartmentAction, updateDepartmentAction } from "@/actions/department";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { FormDialog } from "@/components/shared/FormDialog";
+import { FormField } from "@/components/shared/FormField";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { departmentInputSchema, type DepartmentInput } from "@/schemas/department.schema";
 
 type Departamento = { departmentId: number; name: string; groupName: string };
@@ -41,12 +30,14 @@ export function DepartmentFormDialog({
   const [abierto, setAbierto] = useState(false);
   const esEdicion = departamento !== undefined;
 
+  const valoresIniciales = {
+    name: departamento?.name ?? "",
+    groupName: departamento?.groupName ?? "",
+  };
+
   const form = useForm<DepartmentInput>({
     resolver: zodResolver(departmentInputSchema),
-    defaultValues: {
-      name: departamento?.name ?? "",
-      groupName: departamento?.groupName ?? "",
-    },
+    defaultValues: valoresIniciales,
   });
 
   const {
@@ -61,7 +52,7 @@ export function DepartmentFormDialog({
     if (resultado.success) {
       toast.success(esEdicion ? "Departamento actualizado." : "Departamento creado.");
       setAbierto(false);
-      form.reset(esEdicion ? valores : { name: "", groupName: "" });
+      form.reset(esEdicion ? valores : valoresIniciales);
 
       return;
     }
@@ -82,69 +73,35 @@ export function DepartmentFormDialog({
   }
 
   return (
-    <Dialog
-      open={abierto}
-      onOpenChange={(nuevoEstado) => {
+    <FormDialog
+      abierto={abierto}
+      onAbiertoChange={(nuevoEstado) => {
         setAbierto(nuevoEstado);
 
+        // Al cerrar se descarta lo tecleado: la próxima apertura debe partir
+        // de los datos reales, no de una edición a medias.
         if (!nuevoEstado) {
-          form.reset({
-            name: departamento?.name ?? "",
-            groupName: departamento?.groupName ?? "",
-          });
+          form.reset(valoresIniciales);
         }
       }}
+      trigger={trigger}
+      titulo={esEdicion ? "Editar departamento" : "Nuevo departamento"}
+      descripcion={
+        esEdicion
+          ? "Modificá los datos del departamento."
+          : "Completá los datos para registrar un departamento."
+      }
+      textoEnviar={esEdicion ? "Guardar cambios" : "Crear departamento"}
+      enviando={isSubmitting}
+      onSubmit={form.handleSubmit(alEnviar)}
     >
-      <DialogTrigger render={trigger} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {esEdicion ? "Editar departamento" : "Nuevo departamento"}
-          </DialogTitle>
-          <DialogDescription>
-            {esEdicion
-              ? "Modificá los datos del departamento."
-              : "Completá los datos para registrar un departamento."}
-          </DialogDescription>
-        </DialogHeader>
+      <FormField id="name" label="Nombre" error={errors.name?.message}>
+        {(props) => <Input autoFocus {...props} {...form.register("name")} />}
+      </FormField>
 
-        <form onSubmit={form.handleSubmit(alEnviar)} className="space-y-4" noValidate>
-          <div className="space-y-1.5">
-            <Label htmlFor="name">Nombre</Label>
-            <Input
-              id="name"
-              autoFocus
-              aria-invalid={Boolean(errors.name)}
-              {...form.register("name")}
-            />
-            {errors.name && (
-              <p className="text-destructive text-xs">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="groupName">Grupo</Label>
-            <Input
-              id="groupName"
-              aria-invalid={Boolean(errors.groupName)}
-              {...form.register("groupName")}
-            />
-            {errors.groupName && (
-              <p className="text-destructive text-xs">{errors.groupName.message}</p>
-            )}
-          </div>
-
-          <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>
-              Cancelar
-            </DialogClose>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <LoaderCircleIcon className="animate-spin" />}
-              {esEdicion ? "Guardar cambios" : "Crear departamento"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <FormField id="groupName" label="Grupo" error={errors.groupName?.message}>
+        {(props) => <Input {...props} {...form.register("groupName")} />}
+      </FormField>
+    </FormDialog>
   );
 }

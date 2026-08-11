@@ -7,6 +7,7 @@ import { LogOutIcon, MenuIcon, XIcon } from "lucide-react";
 
 import { logout } from "@/actions/logout";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NAV_ITEMS } from "@/config/navigation";
 import type { SessionUser } from "@/lib/session";
@@ -54,7 +55,10 @@ export function AppShell({
       <aside
         className={cn(
           "border-border/60 bg-card/60 fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r backdrop-blur-xl transition-transform duration-200 lg:translate-x-0",
-          cajonAbierto ? "translate-x-0" : "-translate-x-full",
+          // Cerrado en móvil no basta con desplazarlo fuera de pantalla: seguiría
+          // siendo enfocable con el tabulador. `invisible` lo saca del orden de
+          // foco, y `lg:visible` lo devuelve donde la barra es permanente.
+          cajonAbierto ? "translate-x-0" : "invisible -translate-x-full lg:visible",
         )}
       >
         <div className="flex h-14 shrink-0 items-center justify-between px-4">
@@ -89,6 +93,11 @@ export function AppShell({
                 >
                   <Icon className="size-4 shrink-0" />
                   {label}
+                  {/* La atenuación sola no basta: el estado tiene que leerse
+                      también sin distinguir contraste. */}
+                  <Badge variant="secondary" className="ml-auto">
+                    Pronto
+                  </Badge>
                 </span>
               );
             }
