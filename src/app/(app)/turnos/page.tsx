@@ -1,19 +1,27 @@
 import type { Metadata } from "next";
-import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  MoonStarIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from "lucide-react";
 
-import { DeleteDepartmentDialog } from "@/components/departments/DeleteDepartmentDialog";
-import { DepartmentFormDialog } from "@/components/departments/DepartmentFormDialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Pagination } from "@/components/shared/Pagination";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { DeleteShiftDialog } from "@/components/shifts/DeleteShiftDialog";
+import { ShiftFormDialog } from "@/components/shifts/ShiftFormDialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { DepartmentRow } from "@/data/department";
+import type { ShiftRow } from "@/data/shift";
+import { cruzaMedianoche, formatearDuracionDeTurno } from "@/lib/horario";
 import { requireSessionUser } from "@/lib/session";
-import { departmentQuerySchema } from "@/schemas/department.schema";
-import { getDepartmentPage } from "@/services/department.service";
+import { shiftQuerySchema } from "@/schemas/shift.schema";
+import { getShiftPage } from "@/services/shift.service";
 
-export const metadata: Metadata = { title: "Departamentos" };
+export const metadata: Metadata = { title: "Turnos" };
 
 const formatoFecha = new Intl.DateTimeFormat("es-ES", {
   day: "2-digit",
@@ -21,7 +29,7 @@ const formatoFecha = new Intl.DateTimeFormat("es-ES", {
   year: "numeric",
 });
 
-export default async function DepartamentosPage({
+export default async function TurnosPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -31,8 +39,8 @@ export default async function DepartamentosPage({
   await requireSessionUser();
 
   const params = await searchParams;
-  const query = departmentQuerySchema.parse({ q: params.q, page: params.page });
-  const resultado = await getDepartmentPage(query);
+  const query = shiftQuerySchema.parse({ q: params.q, page: params.page });
+  const resultado = await getShiftPage(query);
 
   // El fallo se pinta dentro de la propia tabla, no en lugar de la página: la
   // cabecera y el buscador siguen ahí para poder reintentar.
@@ -40,50 +48,63 @@ export default async function DepartamentosPage({
     ? resultado.data
     : { items: [], total: 0, page: 1, pageCount: 1 };
 
-  const columnas: DataTableColumn<DepartmentRow>[] = [
+  const columnas: DataTableColumn<ShiftRow>[] = [
     {
       id: "name",
       header: "Nombre",
-      cell: (departamento) => <span className="font-medium">{departamento.name}</span>,
+      cell: (turno) => <span className="font-medium">{turno.name}</span>,
     },
     {
-      id: "groupName",
-      header: "Grupo",
-      className: "text-muted-foreground",
-      cell: (departamento) => departamento.groupName,
+      id: "horario",
+      header: "Horario",
+      cell: (turno) => (
+        <span className="flex items-center gap-1.5">
+          <span className="tabular-nums">{turno.startTime}</span>
+          <ArrowRightIcon className="text-muted-foreground size-3.5 shrink-0" />
+          <span className="tabular-nums">{turno.endTime}</span>
+          {cruzaMedianoche(turno.startTime, turno.endTime) && (
+            <Badge variant="secondary" title="El turno termina al día siguiente">
+              <MoonStarIcon />
+              Nocturno
+            </Badge>
+          )}
+        </span>
+      ),
+    },
+    {
+      id: "duracion",
+      header: "Duración",
+      className: "text-muted-foreground hidden sm:table-cell",
+      cell: (turno) => formatearDuracionDeTurno(turno.startTime, turno.endTime),
     },
     {
       id: "modifiedDate",
       header: "Modificado",
-      className: "text-muted-foreground hidden sm:table-cell",
-      cell: (departamento) => formatoFecha.format(departamento.modifiedDate),
+      className: "text-muted-foreground hidden lg:table-cell",
+      cell: (turno) => formatoFecha.format(turno.modifiedDate),
     },
     {
       id: "acciones",
       header: "Acciones",
       className: "w-0 text-right",
-      cell: (departamento) => (
+      cell: (turno) => (
         <div className="flex justify-end gap-1">
-          <DepartmentFormDialog
-            departamento={departamento}
+          <ShiftFormDialog
+            turno={turno}
             trigger={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Editar ${departamento.name}`}
-              >
+              <Button variant="ghost" size="icon-sm" aria-label={`Editar ${turno.name}`}>
                 <PencilIcon />
               </Button>
             }
           />
-          <DeleteDepartmentDialog
-            departmentId={departamento.departmentId}
-            name={departamento.name}
+          <DeleteShiftDialog
+            shiftId={turno.shiftId}
+            name={turno.name}
             trigger={
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={`Eliminar ${departamento.name}`}
+                aria-label={`Eliminar ${turno.name}`}
               >
                 <Trash2Icon />
               </Button>
@@ -98,19 +119,17 @@ export default async function DepartamentosPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Departamentos
-          </h2>
+          <h2 className="font-heading text-2xl font-semibold tracking-tight">Turnos</h2>
           <p className="text-muted-foreground text-sm">
-            Estructura organizativa heredada de AdventureWorks.
+            Jornadas laborales sobre las que se asigna al personal.
           </p>
         </div>
 
-        <DepartmentFormDialog
+        <ShiftFormDialog
           trigger={
             <Button>
               <PlusIcon />
-              Nuevo departamento
+              Nuevo turno
             </Button>
           }
         />
@@ -119,7 +138,7 @@ export default async function DepartamentosPage({
       <SearchInput
         valorInicial={query.q}
         placeholder="Buscar por nombre…"
-        etiqueta="Buscar departamentos por nombre"
+        etiqueta="Buscar turnos por nombre"
       />
 
       <Card className="bg-card/60 overflow-hidden backdrop-blur-xl">
@@ -127,12 +146,12 @@ export default async function DepartamentosPage({
           <DataTable
             columnas={columnas}
             filas={items}
-            idDeFila={(departamento) => departamento.departmentId}
+            idDeFila={(turno) => turno.shiftId}
             error={resultado.success ? undefined : resultado.error.message}
             vacio={
               query.q
-                ? `No hay departamentos que coincidan con "${query.q}".`
-                : "Todavía no hay departamentos registrados."
+                ? `No hay turnos que coincidan con "${query.q}".`
+                : "Todavía no hay turnos registrados."
             }
           />
         </CardContent>
@@ -142,10 +161,10 @@ export default async function DepartamentosPage({
         page={page}
         pageCount={pageCount}
         total={total}
-        basePath="/departamentos"
+        basePath="/turnos"
         params={{ q: query.q }}
-        singular="departamento"
-        plural="departamentos"
+        singular="turno"
+        plural="turnos"
       />
     </div>
   );
