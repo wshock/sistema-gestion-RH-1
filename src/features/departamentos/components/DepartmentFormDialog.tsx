@@ -5,11 +5,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { createDepartmentAction, updateDepartmentAction } from "@/actions/department";
+import {
+  createDepartmentAction,
+  updateDepartmentAction,
+} from "@/features/departamentos/actions/department";
 import { FormDialog } from "@/components/shared/FormDialog";
 import { FormField } from "@/components/shared/FormField";
 import { Input } from "@/components/ui/input";
-import { departmentInputSchema, type DepartmentInput } from "@/schemas/department.schema";
+import {
+  departmentInputSchema,
+  type DepartmentInput,
+} from "@/features/departamentos/schemas";
 
 type Departamento = { departmentId: number; name: string; groupName: string };
 

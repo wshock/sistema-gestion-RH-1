@@ -126,6 +126,8 @@ Datos           Cliente de Prisma. Nadie más consulta la BD.
 - La validación de servidor es obligatoria, independiente de la de cliente.
 - Los registros de historial se insertan, nunca se actualizan ni se borran.
 
+Desde la entrega 2 el código se agrupa por módulo de dominio en `src/features/`. Las convenciones están en [CONVENTIONS.md](./CONVENTIONS.md); los acuerdos de reparto de un módulo entre ambos desarrolladores, en [`docs/`](./docs).
+
 ---
 
 ## Roadmap

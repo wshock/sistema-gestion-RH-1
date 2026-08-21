@@ -3,11 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import type { ShiftRow } from "@/data/shift";
+import type { ShiftRow } from "@/features/turnos/data/shift";
 import { fail, type Result } from "@/lib/result";
 import { getSessionUser } from "@/lib/session";
-import { shiftIdSchema, shiftInputSchema } from "@/schemas/shift.schema";
-import * as shiftService from "@/services/shift.service";
+import { shiftIdSchema, shiftInputSchema } from "@/features/turnos/schemas";
+import * as shiftService from "@/features/turnos/services/shift.service";
 
 /**
  * Server Actions de turnos.

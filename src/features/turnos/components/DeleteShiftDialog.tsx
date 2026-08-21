@@ -2,22 +2,22 @@
 
 import { toast } from "sonner";
 
-import { deleteDepartmentAction } from "@/actions/department";
+import { deleteShiftAction } from "@/features/turnos/actions/shift";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
-export function DeleteDepartmentDialog({
-  departmentId,
+export function DeleteShiftDialog({
+  shiftId,
   name,
   trigger,
 }: {
-  departmentId: number;
+  shiftId: number;
   name: string;
   trigger: React.ReactElement;
 }) {
   return (
     <ConfirmDialog
       trigger={trigger}
-      titulo="Eliminar departamento"
+      titulo="Eliminar turno"
       descripcion={
         <>
           ¿Seguro que querés eliminar{" "}
@@ -27,7 +27,7 @@ export function DeleteDepartmentDialog({
       }
       textoConfirmar="Eliminar"
       onConfirmar={async () => {
-        const resultado = await deleteDepartmentAction(departmentId);
+        const resultado = await deleteShiftAction(shiftId);
 
         if (resultado.success) {
           toast.success(`Se eliminó "${name}".`);
@@ -35,10 +35,10 @@ export function DeleteDepartmentDialog({
           return true;
         }
 
-        // Aquí aparece la regla de negocio: si el departamento tiene historial
-        // de empleados, el servicio lo explica en lugar de dejar salir el error
-        // de clave foránea. El diálogo sigue abierto para que el mensaje no se
-        // pierda junto con el contexto de qué se intentaba borrar.
+        // Aquí aparece la regla de negocio: si el turno tiene historial de
+        // empleados asignados, el servicio lo explica en lugar de dejar salir
+        // el error de clave foránea. El diálogo sigue abierto para que el
+        // mensaje no se pierda junto con el contexto de qué se intentaba borrar.
         toast.error(resultado.error.message);
 
         return false;

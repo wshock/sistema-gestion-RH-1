@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
-import { DeleteDepartmentDialog } from "@/components/departments/DeleteDepartmentDialog";
-import { DepartmentFormDialog } from "@/components/departments/DepartmentFormDialog";
+import { DeleteDepartmentDialog } from "@/features/departamentos/components/DeleteDepartmentDialog";
+import { DepartmentFormDialog } from "@/features/departamentos/components/DepartmentFormDialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Pagination } from "@/components/shared/Pagination";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { DepartmentRow } from "@/data/department";
+import type { DepartmentRow } from "@/features/departamentos/data/department";
 import { requireSessionUser } from "@/lib/session";
-import { departmentQuerySchema } from "@/schemas/department.schema";
-import { getDepartmentPage } from "@/services/department.service";
+import { departmentQuerySchema } from "@/features/departamentos/schemas";
+import { getDepartmentPage } from "@/features/departamentos/services/department.service";
 
 export const metadata: Metadata = { title: "Departamentos" };
 

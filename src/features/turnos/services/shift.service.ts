@@ -1,8 +1,12 @@
-import * as shiftData from "@/data/shift";
-import type { ShiftRow } from "@/data/shift";
+import * as shiftData from "@/features/turnos/data/shift";
+import type { ShiftRow } from "@/features/turnos/data/shift";
 import { mensajeDeBloqueo, totalAsignaciones } from "@/lib/referencias";
 import { fail, ok, unexpected, type Result } from "@/lib/result";
-import { TAMANO_PAGINA, type ShiftInput, type ShiftQuery } from "@/schemas/shift.schema";
+import {
+  TAMANO_PAGINA,
+  type ShiftInput,
+  type ShiftQuery,
+} from "@/features/turnos/schemas";
 
 /**
  * Reglas de negocio de turnos.

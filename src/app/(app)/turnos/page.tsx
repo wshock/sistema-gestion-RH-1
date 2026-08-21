@@ -10,16 +10,16 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Pagination } from "@/components/shared/Pagination";
 import { SearchInput } from "@/components/shared/SearchInput";
-import { DeleteShiftDialog } from "@/components/shifts/DeleteShiftDialog";
-import { ShiftFormDialog } from "@/components/shifts/ShiftFormDialog";
+import { DeleteShiftDialog } from "@/features/turnos/components/DeleteShiftDialog";
+import { ShiftFormDialog } from "@/features/turnos/components/ShiftFormDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { ShiftRow } from "@/data/shift";
-import { cruzaMedianoche, formatearDuracionDeTurno } from "@/lib/horario";
+import type { ShiftRow } from "@/features/turnos/data/shift";
+import { cruzaMedianoche, formatearDuracionDeTurno } from "@/features/turnos/horario";
 import { requireSessionUser } from "@/lib/session";
-import { shiftQuerySchema } from "@/schemas/shift.schema";
-import { getShiftPage } from "@/services/shift.service";
+import { shiftQuerySchema } from "@/features/turnos/schemas";
+import { getShiftPage } from "@/features/turnos/services/shift.service";
 
 export const metadata: Metadata = { title: "Turnos" };
 

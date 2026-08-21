@@ -1,13 +1,15 @@
 # Componentes (Presentación)
 
-Componentes de React reutilizables, organizados en cuatro niveles de menor a mayor especificidad:
+Componentes de React sin dueño de dominio, de menor a mayor especificidad:
 
 - `ui/` — primitivos generados por shadcn/ui sobre Base UI. No se editan a mano salvo necesidad puntual y **nunca** contienen nombres de dominio: si un componente se llama `EmployeeTable`, no va acá.
 - `layout/` — armazón de la aplicación: `AppShell`, cabecera, navegación, cambio de tema.
-- `shared/` — componentes propios pero genéricos, reutilizables por cualquier módulo (páginas de estado, tablas, paginadores). No importan nada de un módulo concreto.
-- `<módulo>/` (`auth/`, `departments/`, …) — componentes atados a un dominio: formularios, tablas y diálogos de ese módulo.
+- `shared/` — componentes propios pero genéricos, reutilizables por cualquier módulo (tablas, diálogos, paginadores). No importan nada de un módulo concreto.
+- `auth/` — el formulario de inicio de sesión. Autenticación no se migró a feature.
 
-Junto con `src/app`, esta carpeta forma la capa de **Presentación**: solo renderiza UI y llama a `src/actions`. No importa nada de `src/data` ni de `src/services`.
+> Los componentes atados a un dominio viven en `src/features/<módulo>/components/`. Si un componente menciona una entidad del negocio, ese es su sitio.
+
+Junto con `src/app`, esta carpeta forma la capa de **Presentación**: solo renderiza UI y llama a las Server Actions. No importa nada de `data/` ni de `services/`.
 
 ## Qué hay en `shared/`
 
@@ -25,6 +27,6 @@ Son la base sobre la que se arman los módulos siguientes. Ninguno conoce una en
 
 Las notificaciones de resultado son [Sonner](https://sonner.emilkowal.ski/): `toast.success(…)` / `toast.error(…)`. El `<Toaster />` ya está montado en el layout raíz, no hace falta añadirlo por página.
 
-Los módulos de departamentos (`departments/`) y turnos (`shifts/`) son los ejemplos de referencia: entre los dos usan todos, y son casi idénticos salvo por los campos propios de cada entidad. Si al construir un módulo nuevo hace falta copiar uno de estos componentes para cambiarle un detalle, lo correcto es generalizar el compartido, no duplicarlo.
+Los módulos `features/departamentos` y `features/turnos` son los ejemplos de referencia: entre los dos usan todos, y son casi idénticos salvo por los campos propios de cada entidad. Si al construir un módulo nuevo hace falta copiar uno de estos componentes para cambiarle un detalle, lo correcto es generalizar el compartido, no duplicarlo.
 
 Por defecto son Server Components. `"use client"` se añade solo cuando hace falta interactividad real (estado, efectos, manejadores de eventos), y lo más abajo posible en el árbol para que el resto siga renderizándose en el servidor.

@@ -1,12 +1,12 @@
-import * as departmentData from "@/data/department";
-import type { DepartmentRow } from "@/data/department";
+import * as departmentData from "@/features/departamentos/data/department";
+import type { DepartmentRow } from "@/features/departamentos/data/department";
 import { mensajeDeBloqueo, totalAsignaciones } from "@/lib/referencias";
 import { fail, ok, unexpected, type Result } from "@/lib/result";
 import {
   TAMANO_PAGINA,
   type DepartmentInput,
   type DepartmentQuery,
-} from "@/schemas/department.schema";
+} from "@/features/departamentos/schemas";
 
 /**
  * Reglas de negocio de departamentos.

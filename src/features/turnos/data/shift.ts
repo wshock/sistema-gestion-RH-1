@@ -1,6 +1,6 @@
 import { prisma } from "@/data/prisma";
 import type { ConteoAsignaciones } from "@/lib/referencias";
-import type { ShiftInput } from "@/schemas/shift.schema";
+import type { ShiftInput } from "@/features/turnos/schemas";
 
 /**
  * Acceso a `humanresources.shift`.
