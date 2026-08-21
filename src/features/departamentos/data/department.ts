@@ -1,6 +1,6 @@
 import { prisma } from "@/data/prisma";
 import type { ConteoAsignaciones } from "@/lib/referencias";
-import type { DepartmentInput } from "@/schemas/department.schema";
+import type { DepartmentInput } from "@/features/departamentos/schemas";
 
 /**
  * Acceso a `humanresources.department`.

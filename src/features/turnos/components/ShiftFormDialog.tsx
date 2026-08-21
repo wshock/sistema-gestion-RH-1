@@ -6,12 +6,12 @@ import { MoonStarIcon } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
-import { createShiftAction, updateShiftAction } from "@/actions/shift";
+import { createShiftAction, updateShiftAction } from "@/features/turnos/actions/shift";
 import { FormDialog } from "@/components/shared/FormDialog";
 import { FormField } from "@/components/shared/FormField";
 import { Input } from "@/components/ui/input";
-import { cruzaMedianoche, formatearDuracionDeTurno } from "@/lib/horario";
-import { shiftInputSchema, type ShiftInput } from "@/schemas/shift.schema";
+import { cruzaMedianoche, formatearDuracionDeTurno } from "@/features/turnos/horario";
+import { shiftInputSchema, type ShiftInput } from "@/features/turnos/schemas";
 
 type Turno = { shiftId: number; name: string; startTime: string; endTime: string };
 

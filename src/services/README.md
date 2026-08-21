@@ -1,5 +1,7 @@
 # Servicios
 
+> Desde la entrega 2 los servicios de cada dominio viven en `src/features/<módulo>/services/`. Acá queda solo lo de autenticación, que no se migró a feature.
+
 Lógica de negocio: reglas de dominio, orquestación de transacciones y todo lo que decide _qué_ debe pasar cuando se ejecuta un proceso (contratación, cambio salarial, traslado, etc.).
 
 **Reglas:**

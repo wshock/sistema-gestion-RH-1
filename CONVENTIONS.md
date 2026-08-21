@@ -6,27 +6,31 @@ Acordadas por el equipo para mantener el código consistente durante las cuatro 
 
 ## Estructura de carpetas
 
+Desde la entrega 2 la estructura es **feature-based con capas ligeras**: cada módulo de dominio agrupa sus propias capas.
+
 ```
 src/
+  features/     Un módulo de dominio por carpeta (ver features/README.md)
+    <módulo>/
+      types.ts      Tipos del dominio
+      schemas.ts    Esquemas de Zod (cliente + servidor)
+      data/         Consultas a la base
+      services/     Reglas de negocio y transacciones
+      actions/      Server Actions
+      components/   Componentes de ese dominio
   app/          Presentación — rutas del App Router (páginas, layouts)
-  components/   Presentación — componentes de React (ui/ = shadcn, resto = propios)
-  actions/      Acciones — Server Actions
-  services/     Servicios — lógica de negocio y transacciones
-  data/         Datos — cliente de Prisma, único punto de acceso a la BD
-  schemas/      Esquemas de Zod compartidos entre cliente y servidor
+  components/   ui/ = shadcn · shared/ = genéricos · layout/ = armazón
   lib/          Utilidades transversales sin capa propia
+  data/         Cliente de Prisma (infraestructura, no un dominio)
   config/       Constantes de configuración (navegación, límites)
+  actions/ services/ schemas/   Solo lo de autenticación, no migrado a feature
   proxy.ts      Chequeo optimista de sesión previo a cada navegación
 prisma/         Schema y migraciones de Prisma
 ```
 
-Cada carpeta de capa tiene su propio `README.md` con las reglas específicas que debe cumplir su código.
+Las cuatro capas de la arquitectura y sus reglas **no cambian**; cambia el criterio de agrupación, de tipo de archivo a módulo de dominio. Cada carpeta conserva su `README.md` con las reglas específicas que debe cumplir su código.
 
-> **Evolución prevista.** A partir de la entrega 2 la estructura pasa a ser
-> **feature-based con capas ligeras**: `src/features/<módulo>/{components,actions,services,data,schemas}`,
-> creando dentro de cada módulo solo las capas que necesite. Las cuatro capas y
-> sus reglas no cambian; cambia el criterio de agrupación, de tipo de archivo a
-> módulo de dominio. Se pospuso para no refactorizar en vísperas de la entrega 1.
+**Un módulo no importa de otro.** Si dos lo necesitan, el código sube a `src/lib/` o a `src/components/shared/`.
 
 ---
 
@@ -38,7 +42,8 @@ Cada carpeta de capa tiene su propio `README.md` con las reglas específicas que
 | Componentes React (archivo y export) | `PascalCase`                                | `EmployeeTable.tsx`                    |
 | Server Actions                       | `camelCase`, verbo + entidad                | `createEmployee.ts`, `changeSalary.ts` |
 | Servicios                            | `camelCase`, sufijo `.service.ts`           | `employee.service.ts`                  |
-| Esquemas de Zod                      | `camelCase`, sufijo `.schema.ts`            | `employee.schema.ts`                   |
+| Esquemas de Zod                      | `schemas.ts` dentro de la feature           | `features/turnos/schemas.ts`           |
+| Tipos del dominio                    | `types.ts` dentro de la feature             | `features/<módulo>/types.ts`           |
 | Rutas del App Router                 | minúsculas, siguiendo convención de Next.js | `app/empleados/[id]/page.tsx`          |
 | Resto de archivos TS (hooks, utils)  | `camelCase`                                 | `formatCurrency.ts`                    |
 
@@ -104,7 +109,7 @@ Ver el diagrama completo en el [README](./README.md#arquitectura).
 
 - Ninguna capa fuera de `data/` invoca Prisma directamente.
 - Toda escritura multi-tabla va dentro de una transacción (`prisma.$transaction`).
-- Los esquemas de Zod se definen una vez en `src/schemas` y se comparten entre cliente y servidor.
+- Los esquemas de Zod se definen una vez en `schemas.ts` de su feature y se comparten entre cliente y servidor.
 - La validación de servidor en las Server Actions es obligatoria, independiente de la del cliente.
 - Los registros de historial (`EmployeePayHistory`, `EmployeeDepartmentHistory`) se insertan, nunca se actualizan ni se borran.
 - Todo lo que cruza de servicios a presentación viaja como `Result<T>` (`src/lib/result.ts`): la UI nunca recibe una excepción de Prisma. Los fallos previstos llevan código de negocio; los inesperados se registran en el servidor y llegan al usuario como mensaje genérico.

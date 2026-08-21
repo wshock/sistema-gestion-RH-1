@@ -1,5 +1,7 @@
 # Acciones
 
+> Desde la entrega 2 las Server Actions de cada dominio viven en `src/features/<módulo>/actions/`. Acá queda solo lo de autenticación, que no se migró a feature.
+
 Server Actions (`"use server"`). Es el puente entre la presentación y los servicios.
 
 **Responsabilidad de cada action:**

@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import type { DepartmentRow } from "@/data/department";
+import type { DepartmentRow } from "@/features/departamentos/data/department";
 import { fail, type Result } from "@/lib/result";
 import { getSessionUser } from "@/lib/session";
-import { departmentIdSchema, departmentInputSchema } from "@/schemas/department.schema";
-import * as departmentService from "@/services/department.service";
+import {
+  departmentIdSchema,
+  departmentInputSchema,
+} from "@/features/departamentos/schemas";
+import * as departmentService from "@/features/departamentos/services/department.service";
 
 /**
  * Server Actions de departamentos.
