@@ -28,4 +28,4 @@ Las cuatro capas de la arquitectura y sus reglas **no cambian** (ver [README del
 
 - **Un módulo no importa de otro.** Si dos lo necesitan, el código sube a `src/lib/` o a `src/components/shared/`. `lib/referencias.ts` es el ejemplo: departamentos y turnos comparten la regla de bloqueo por integridad referencial.
 - **La dirección de las dependencias no cambia**: `app/` → `components/` → `actions/` → `services/` → `data/`. Ninguna capa fuera de `data/` invoca Prisma.
-- **Un módulo repartido entre dos personas necesita un contrato escrito** antes de empezar: qué archivos son de cada quién y qué tipos comparten.
+- **Un módulo repartido entre dos personas necesita un contrato escrito** antes de empezar: qué archivos son de cada quién y qué tipos comparten. Ver [`docs/acuerdo-empleados.md`](../../docs/acuerdo-empleados.md).

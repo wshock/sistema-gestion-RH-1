@@ -26,6 +26,7 @@ src/
   actions/ services/ schemas/   Solo lo de autenticación, no migrado a feature
   proxy.ts      Chequeo optimista de sesión previo a cada navegación
 prisma/         Schema y migraciones de Prisma
+docs/           Acuerdos de equipo y documentación de módulos
 ```
 
 Las cuatro capas de la arquitectura y sus reglas **no cambian**; cambia el criterio de agrupación, de tipo de archivo a módulo de dominio. Cada carpeta conserva su `README.md` con las reglas específicas que debe cumplir su código.
