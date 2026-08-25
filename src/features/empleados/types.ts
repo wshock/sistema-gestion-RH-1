@@ -52,6 +52,7 @@ export type EmployeeListItem = {
   businessEntityId: number;
   firstName: string;
   lastName: string;
+  nationalIdNumber: string;
   jobTitle: string;
   /** `"AAAA-MM-DD"`. */
   hireDate: string;
