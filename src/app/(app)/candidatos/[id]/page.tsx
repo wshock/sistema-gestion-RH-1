@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, PencilIcon } from "lucide-react";
 
+import { CandidateFormDialog } from "@/features/candidatos/components/CandidateFormDialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatearCurriculum } from "@/features/candidatos/resume";
 import { requireSessionUser } from "@/lib/session";
@@ -64,9 +66,28 @@ export default async function CandidatoPage({
           </p>
         </div>
 
-        <Badge variant={candidato.status === "contratado" ? "secondary" : "outline"}>
-          {candidato.status === "contratado" ? "Contratado" : "Pendiente"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={candidato.status === "contratado" ? "secondary" : "outline"}>
+            {candidato.status === "contratado" ? "Contratado" : "Pendiente"}
+          </Badge>
+
+          {/* Un candidato contratado no se edita: alteraría la información
+              sobre la que ya se decidió la contratación. */}
+          {candidato.status === "pendiente" && (
+            <CandidateFormDialog
+              candidato={{
+                jobCandidateId: candidato.jobCandidateId,
+                resume: candidato.resume,
+              }}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <PencilIcon />
+                  Editar
+                </Button>
+              }
+            />
+          )}
+        </div>
       </div>
 
       <Card className="bg-card/60 backdrop-blur-xl">
