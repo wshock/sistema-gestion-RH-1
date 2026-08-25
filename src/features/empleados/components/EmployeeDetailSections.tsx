@@ -1,18 +1,18 @@
 import type { ReactNode } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
-import type {
-  EmployeeDetail,
-  Gender,
-  MaritalStatus,
-  PayFrequency,
-} from "@/features/empleados/types";
+import {
+  formatCalendarDate,
+  formatPayRate,
+  PAY_FREQUENCY_LABEL,
+} from "@/features/empleados/format";
+import type { EmployeeDetail, Gender, MaritalStatus } from "@/features/empleados/types";
 
 /**
  * Tres bloques de la ficha: personales, laborales y situación vigente.
  *
- * Los historiales completos (HU de F05 posterior) no viven acá: esta vista
- * solo muestra el departamento, el turno y el salario que cuentan hoy.
+ * Los historiales completos van en `EmployeeAssignmentHistory` y
+ * `EmployeePayHistory`; acá solo se muestra lo que cuenta hoy.
  */
 
 const ESTADO_CIVIL: Record<MaritalStatus, string> = {
@@ -24,30 +24,6 @@ const GENERO: Record<Gender, string> = {
   F: "Femenino",
   M: "Masculino",
 };
-
-const FRECUENCIA: Record<PayFrequency, string> = {
-  1: "Mensual",
-  2: "Quincenal",
-};
-
-const formatoFecha = new Intl.DateTimeFormat("es-CO", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
-const formatoSalario = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
-
-/** Fecha de calendario `"AAAA-MM-DD"` → texto, sin correr el día por el huso. */
-function fechaDeCalendario(iso: string): string {
-  const [anio, mes, dia] = iso.split("-").map(Number);
-
-  return formatoFecha.format(new Date(Date.UTC(anio, mes - 1, dia)));
-}
 
 function Campo({ etiqueta, valor }: { etiqueta: string; valor: ReactNode }) {
   return (
@@ -84,7 +60,7 @@ export function EmployeeDetailSections({ empleado }: { empleado: EmployeeDetail 
             <Campo etiqueta="Documento" valor={empleado.nationalIdNumber} />
             <Campo
               etiqueta="Fecha de nacimiento"
-              valor={fechaDeCalendario(empleado.birthDate)}
+              valor={formatCalendarDate(empleado.birthDate)}
             />
             <Campo etiqueta="Estado civil" valor={ESTADO_CIVIL[empleado.maritalStatus]} />
             <Campo etiqueta="Género" valor={GENERO[empleado.gender]} />
@@ -102,7 +78,7 @@ export function EmployeeDetailSections({ empleado }: { empleado: EmployeeDetail 
             <Campo etiqueta="Cargo" valor={empleado.jobTitle} />
             <Campo
               etiqueta="Fecha de contratación"
-              valor={fechaDeCalendario(empleado.hireDate)}
+              valor={formatCalendarDate(empleado.hireDate)}
             />
             <Campo
               etiqueta="Tipo de remuneración"
@@ -147,10 +123,10 @@ export function EmployeeDetailSections({ empleado }: { empleado: EmployeeDetail 
               valor={
                 empleado.currentPay ? (
                   <span>
-                    {formatoSalario.format(empleado.currentPay.rate)} / hora
+                    {formatPayRate(empleado.currentPay.rate)} / hora
                     <span className="text-muted-foreground">
                       {" "}
-                      · {FRECUENCIA[empleado.currentPay.payFrequency]}
+                      · {PAY_FREQUENCY_LABEL[empleado.currentPay.payFrequency]}
                     </span>
                   </span>
                 ) : (

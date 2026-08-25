@@ -63,8 +63,8 @@ export const getEmployeeDetail = cache(
       }
 
       const [assignmentHistory, payHistory] = await Promise.all([
-        employeeData.listAssignmentHistory(businessEntityId),
-        employeeData.listPayHistory(businessEntityId),
+        loadAssignmentHistory(businessEntityId),
+        loadPayHistory(businessEntityId),
       ]);
 
       return ok({
@@ -81,6 +81,28 @@ export const getEmployeeDetail = cache(
     }
   },
 );
+
+/** Historial de asignaciones, más reciente primero. */
+async function loadAssignmentHistory(businessEntityId: number) {
+  const filas = await employeeData.listAssignmentHistory(businessEntityId);
+
+  return [...filas].sort((a, b) =>
+    a.startDate === b.startDate
+      ? b.departmentId - a.departmentId
+      : a.startDate < b.startDate
+        ? 1
+        : -1,
+  );
+}
+
+/** Historial salarial, fecha de cambio más reciente primero. */
+async function loadPayHistory(businessEntityId: number) {
+  const filas = await employeeData.listPayHistory(businessEntityId);
+
+  return [...filas].sort(
+    (a, b) => b.rateChangeDate.getTime() - a.rateChangeDate.getTime(),
+  );
+}
 
 function comoEstadoCivil(valor: string): MaritalStatus {
   if (valor === "S" || valor === "M") {
