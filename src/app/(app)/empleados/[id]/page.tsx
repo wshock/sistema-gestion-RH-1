@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeftIcon } from "lucide-react";
 
+import { EmployeeAssignmentHistory } from "@/features/empleados/components/EmployeeAssignmentHistory";
 import { EmployeeDetailActions } from "@/features/empleados/components/EmployeeDetailActions";
 import { EmployeeDetailSections } from "@/features/empleados/components/EmployeeDetailSections";
+import { EmployeePayHistory } from "@/features/empleados/components/EmployeePayHistory";
 import { Badge } from "@/components/ui/badge";
 import { requireSessionUser } from "@/lib/session";
 import { employeeIdSchema } from "@/features/empleados/schemas";
@@ -99,6 +101,11 @@ export default async function EmpleadoPage({
       </div>
 
       <EmployeeDetailSections empleado={empleado} />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <EmployeeAssignmentHistory history={empleado.assignmentHistory} />
+        <EmployeePayHistory history={empleado.payHistory} />
+      </div>
     </div>
   );
 }
