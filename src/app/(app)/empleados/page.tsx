@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { listAllDepartments } from "@/features/departamentos/data/department";
+import { listAllShifts } from "@/features/turnos/data/shift";
 import { EmployeeCreateButton } from "@/features/empleados/components/EmployeeCreateButton";
+import { EmployeeFilters } from "@/features/empleados/components/EmployeeFilters";
 import { EmployeeRowActions } from "@/features/empleados/components/EmployeeRowActions";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Pagination } from "@/components/shared/Pagination";
@@ -18,21 +21,38 @@ export const metadata: Metadata = { title: "Empleados" };
 export default async function EmpleadosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    page?: string;
+    departmentId?: string;
+    shiftId?: string;
+    estado?: string;
+  }>;
 }) {
   // El proxy ya filtró, pero esta es la comprobación que de verdad protege:
   // corre en el servidor, pegada a la lectura de datos.
   await requireSessionUser();
 
   const params = await searchParams;
-  const query = employeeQuerySchema.parse({ q: params.q, page: params.page });
-  const resultado = await getEmployeePage(query);
+  const query = employeeQuerySchema.parse(params);
+
+  const [resultado, departamentos, turnos] = await Promise.all([
+    getEmployeePage(query),
+    listAllDepartments(),
+    listAllShifts(),
+  ]);
 
   // El fallo se pinta dentro de la propia tabla, no en lugar de la página: la
-  // cabecera y el buscador siguen ahí para poder reintentar.
+  // cabecera, la búsqueda y los filtros siguen ahí para poder reintentar.
   const { items, total, page, pageCount } = resultado.success
     ? resultado.data
     : { items: [], total: 0, page: 1, pageCount: 1 };
+
+  const hayFiltros =
+    Boolean(query.q) ||
+    query.departmentId !== undefined ||
+    query.shiftId !== undefined ||
+    query.estado !== "todos";
 
   const columnas: DataTableColumn<EmployeeListItem>[] = [
     {
@@ -106,11 +126,18 @@ export default async function EmpleadosPage({
         <EmployeeCreateButton />
       </div>
 
-      <SearchInput
-        valorInicial={query.q}
-        placeholder="Buscar por nombre o documento…"
-        etiqueta="Buscar empleados por nombre o documento"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Con clave en `query.q`: al limpiar filtros la URL pierde `q` y el
+            input debe reiniciar su estado local, no arrastrar lo escrito. */}
+        <SearchInput
+          key={query.q}
+          valorInicial={query.q}
+          placeholder="Buscar por nombre o documento…"
+          etiqueta="Buscar empleados por nombre o documento"
+        />
+
+        <EmployeeFilters departamentos={departamentos} turnos={turnos} query={query} />
+      </div>
 
       <Card className="bg-card/60 overflow-hidden backdrop-blur-xl">
         <CardContent className="p-0">
@@ -118,10 +145,13 @@ export default async function EmpleadosPage({
             columnas={columnas}
             filas={items}
             idDeFila={(empleado) => empleado.businessEntityId}
+            claseDeFila={(empleado) =>
+              empleado.currentFlag ? undefined : "text-muted-foreground opacity-70"
+            }
             error={resultado.success ? undefined : resultado.error.message}
             vacio={
-              query.q
-                ? `No hay empleados que coincidan con "${query.q}".`
+              hayFiltros
+                ? "Ningún empleado coincide con la búsqueda o los filtros aplicados."
                 : "Todavía no hay empleados registrados."
             }
           />
@@ -133,7 +163,12 @@ export default async function EmpleadosPage({
         pageCount={pageCount}
         total={total}
         basePath="/empleados"
-        params={{ q: query.q }}
+        params={{
+          q: query.q,
+          departmentId: query.departmentId ? String(query.departmentId) : undefined,
+          shiftId: query.shiftId ? String(query.shiftId) : undefined,
+          estado: query.estado !== "todos" ? query.estado : undefined,
+        }}
         singular="empleado"
         plural="empleados"
       />

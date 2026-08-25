@@ -36,6 +36,7 @@ export function DataTable<T>({
   columnas,
   filas,
   idDeFila,
+  claseDeFila,
   cargando = false,
   error,
   vacio = "No hay registros para mostrar.",
@@ -44,6 +45,8 @@ export function DataTable<T>({
   columnas: DataTableColumn<T>[];
   filas: T[];
   idDeFila: (fila: T) => React.Key;
+  /** Clases extra por fila, p. ej. para atenuar un registro dado de baja. */
+  claseDeFila?: (fila: T) => string | undefined;
   /** Muestra filas de esqueleto en lugar de datos. */
   cargando?: boolean;
   /** Mensaje de fallo. Tiene prioridad sobre el resto de estados. */
@@ -68,6 +71,7 @@ export function DataTable<T>({
           columnas={columnas}
           filas={filas}
           idDeFila={idDeFila}
+          claseDeFila={claseDeFila}
           cargando={cargando}
           error={error}
           vacio={vacio}
@@ -82,6 +86,7 @@ function DataTableBody<T>({
   columnas,
   filas,
   idDeFila,
+  claseDeFila,
   cargando,
   error,
   vacio,
@@ -90,6 +95,7 @@ function DataTableBody<T>({
   columnas: DataTableColumn<T>[];
   filas: T[];
   idDeFila: (fila: T) => React.Key;
+  claseDeFila?: (fila: T) => string | undefined;
   cargando: boolean;
   error?: string;
   vacio: React.ReactNode;
@@ -136,7 +142,7 @@ function DataTableBody<T>({
   return (
     <>
       {filas.map((fila) => (
-        <TableRow key={idDeFila(fila)}>
+        <TableRow key={idDeFila(fila)} className={claseDeFila?.(fila)}>
           {columnas.map((columna) => (
             <TableCell key={columna.id} className={columna.className}>
               {columna.cell(fila)}
