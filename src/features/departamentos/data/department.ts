@@ -89,6 +89,16 @@ export function findDepartmentById(departmentId: number) {
   return prisma.department.findUnique({ where: { departmentId } });
 }
 
+export type DepartmentOption = { departmentId: number; name: string };
+
+/** Catálogo completo, sin paginar: alimenta selects de otros módulos (filtros y alta de empleados). */
+export function listAllDepartments(): Promise<DepartmentOption[]> {
+  return prisma.department.findMany({
+    select: { departmentId: true, name: true },
+    orderBy: { name: "asc" },
+  });
+}
+
 export function createDepartment({ name, groupName }: DepartmentInput) {
   return prisma.department.create({
     data: { name, groupName, modifiedDate: new Date() },

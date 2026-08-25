@@ -103,6 +103,16 @@ export async function findShiftIdByName(
   return filas[0]?.shiftId ?? null;
 }
 
+export type ShiftOption = { shiftId: number; name: string };
+
+/** Catálogo completo, sin paginar: alimenta selects de otros módulos (filtros y alta de empleados). */
+export function listAllShifts(): Promise<ShiftOption[]> {
+  return prisma.shift.findMany({
+    select: { shiftId: true, name: true },
+    orderBy: { name: "asc" },
+  });
+}
+
 export async function findShiftById(shiftId: number): Promise<ShiftRow | null> {
   const filas = await prisma.$queryRaw<ShiftRow[]>`
     SELECT shiftid                        AS "shiftId",

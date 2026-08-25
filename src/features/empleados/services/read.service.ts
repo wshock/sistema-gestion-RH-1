@@ -19,16 +19,16 @@ export type EmployeeListPage = {
 };
 
 export async function getEmployeePage({
-  q,
   page,
+  ...filtro
 }: EmployeeQuery): Promise<Result<EmployeeListPage>> {
   try {
-    const total = await employeeData.countEmployees(q);
+    const total = await employeeData.countEmployees(filtro);
     const pageCount = Math.max(1, Math.ceil(total / TAMANO_PAGINA));
     const paginaActual = Math.min(page, pageCount);
 
     const items = await employeeData.listEmployees({
-      q,
+      ...filtro,
       skip: (paginaActual - 1) * TAMANO_PAGINA,
       take: TAMANO_PAGINA,
     });
