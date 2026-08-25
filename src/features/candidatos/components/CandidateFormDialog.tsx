@@ -12,6 +12,7 @@ import {
 import { FormDialog } from "@/components/shared/FormDialog";
 import { FormField } from "@/components/shared/FormField";
 import { Textarea } from "@/components/ui/textarea";
+import { formatearCurriculumComoTexto } from "@/features/candidatos/resume";
 import { candidateInputSchema, type CandidateInput } from "@/features/candidatos/schemas";
 
 type Candidato = { jobCandidateId: number; resume: string | null };
@@ -35,7 +36,11 @@ export function CandidateFormDialog({
   const esEdicion = candidato !== undefined;
 
   const valoresIniciales = {
-    resume: candidato?.resume ?? "",
+    // Nunca se precarga el XML crudo de un currículum migrado: se muestra ya
+    // reducido a texto plano, tanto por legibilidad como porque una etiqueta
+    // sin espacios era, literalmente, la palabra más larga del campo —de ahí
+    // el desborde horizontal que rompía el diálogo.
+    resume: candidato?.resume ? formatearCurriculumComoTexto(candidato.resume) : "",
   };
 
   const form = useForm<CandidateInput>({
@@ -93,10 +98,19 @@ export function CandidateFormDialog({
       textoEnviar={esEdicion ? "Guardar cambios" : "Crear candidato"}
       enviando={isSubmitting}
       onSubmit={form.handleSubmit(alEnviar)}
+      className="sm:max-w-lg"
     >
       <FormField id="resume" label="Currículum" error={errors.resume?.message}>
         {(props) => (
-          <Textarea rows={12} autoFocus {...props} {...form.register("resume")} />
+          <Textarea
+            rows={12}
+            autoFocus
+            // Alto acotado con scroll propio: un currículum de miles de
+            // caracteres no debe estirar el campo —ni el diálogo— sin límite.
+            className="max-h-80 resize-y overflow-y-auto wrap-break-word whitespace-pre-wrap"
+            {...props}
+            {...form.register("resume")}
+          />
         )}
       </FormField>
     </FormDialog>
