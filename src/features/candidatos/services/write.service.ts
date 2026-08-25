@@ -4,12 +4,13 @@ import { fail, ok, unexpected, type Result } from "@/lib/result";
 import type { CandidateInput } from "@/features/candidatos/schemas";
 
 /**
- * Reglas de negocio del alta y edición de candidatos.
+ * Reglas de negocio del alta, edición y borrado de candidatos.
  *
- * La única regla propia del módulo vive acá: un candidato contratado no se
- * edita, porque alteraría la información sobre la que ya se decidió una
- * contratación. Se comprueba antes de escribir, no se deduce de un fallo de
- * la base, para poder explicarlo en términos de negocio.
+ * La regla propia del módulo se repite en edición y borrado: un candidato
+ * contratado no se toca, porque alteraría —o rompería, si se borrara— la
+ * trazabilidad de una contratación ya decidida. Se comprueba antes de
+ * escribir, no se deduce de un fallo de la base, para poder explicarlo en
+ * términos de negocio.
  */
 
 export async function createCandidate(
@@ -43,5 +44,28 @@ export async function updateCandidate(
     return ok(await candidateWriteData.updateCandidate(jobCandidateId, input));
   } catch (error) {
     return unexpected("updateCandidate", error);
+  }
+}
+
+export async function deleteCandidate(jobCandidateId: number): Promise<Result<null>> {
+  try {
+    const actual = await candidateWriteData.findCandidateForWrite(jobCandidateId);
+
+    if (!actual) {
+      return fail("NO_ENCONTRADO", "El candidato que intentás eliminar ya no existe.");
+    }
+
+    if (actual.businessEntityId !== null) {
+      return fail(
+        "CONFLICTO",
+        "Este candidato ya fue contratado: eliminarlo rompería la trazabilidad de su contratación.",
+      );
+    }
+
+    await candidateWriteData.deleteCandidate(jobCandidateId);
+
+    return ok(null);
+  } catch (error) {
+    return unexpected("deleteCandidate", error);
   }
 }

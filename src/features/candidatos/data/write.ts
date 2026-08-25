@@ -28,10 +28,10 @@ export function updateCandidate(
 }
 
 /**
- * Lo mínimo para decidir si la edición procede: si tiene empleado asociado,
- * ya fue contratado y su información no se toca. Separada de
- * `findCandidateById` (en `data/read.ts`) porque esta no necesita resolver
- * nombre ni currículum, solo el estado.
+ * Lo mínimo para decidir si la edición o el borrado proceden: si tiene
+ * empleado asociado, ya fue contratado —no se edita ni se elimina—.
+ * Separada de `findCandidateById` (en `data/read.ts`) porque esta no
+ * necesita resolver nombre ni currículum, solo el estado.
  */
 export function findCandidateForWrite(
   jobCandidateId: number,
@@ -39,5 +39,12 @@ export function findCandidateForWrite(
   return prisma.jobCandidate.findUnique({
     where: { jobCandidateId },
     select: { jobCandidateId: true, businessEntityId: true },
+  });
+}
+
+export function deleteCandidate(jobCandidateId: number): Promise<CandidateWriteRow> {
+  return prisma.jobCandidate.delete({
+    where: { jobCandidateId },
+    select: { jobCandidateId: true },
   });
 }

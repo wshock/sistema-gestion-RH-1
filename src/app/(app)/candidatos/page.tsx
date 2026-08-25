@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "lucide-react";
 
 import { CandidateFormDialog } from "@/features/candidatos/components/CandidateFormDialog";
 import { CandidateStatusFilter } from "@/features/candidatos/components/CandidateStatusFilter";
+import { DeleteCandidateDialog } from "@/features/candidatos/components/DeleteCandidateDialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Pagination } from "@/components/shared/Pagination";
 import { Badge } from "@/components/ui/badge";
@@ -62,12 +63,32 @@ export default async function CandidatosPage({
       header: "Acciones",
       className: "w-0 text-right",
       cell: (candidato) => (
-        <Link
-          href={`/candidatos/${candidato.jobCandidateId}`}
-          className="text-muted-foreground hover:text-foreground text-sm whitespace-nowrap"
-        >
-          Ver currículum
-        </Link>
+        <div className="flex items-center justify-end gap-3">
+          <Link
+            href={`/candidatos/${candidato.jobCandidateId}`}
+            className="text-muted-foreground hover:text-foreground text-sm whitespace-nowrap"
+          >
+            Ver currículum
+          </Link>
+
+          {/* Un candidato contratado no se elimina: rompería la trazabilidad
+              de su contratación. */}
+          {candidato.status === "pendiente" && (
+            <DeleteCandidateDialog
+              jobCandidateId={candidato.jobCandidateId}
+              nombre={candidato.name ?? `Candidato #${candidato.jobCandidateId}`}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Eliminar ${candidato.name ?? `candidato #${candidato.jobCandidateId}`}`}
+                >
+                  <Trash2Icon />
+                </Button>
+              }
+            />
+          )}
+        </div>
       ),
     },
   ];

@@ -83,3 +83,23 @@ export async function updateCandidateAction(
 
   return resultado;
 }
+
+export async function deleteCandidateAction(id: unknown): Promise<Result<null>> {
+  if (!(await getSessionUser())) {
+    return fail("NO_AUTORIZADO", SIN_SESION);
+  }
+
+  const parsedId = candidateIdSchema.safeParse(id);
+
+  if (!parsedId.success) {
+    return fail("VALIDACION", "Identificador de candidato inválido.");
+  }
+
+  const resultado = await candidateService.deleteCandidate(parsedId.data);
+
+  if (resultado.success) {
+    revalidatePath(RUTA);
+  }
+
+  return resultado;
+}
