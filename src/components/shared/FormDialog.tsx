@@ -35,6 +35,7 @@ export function FormDialog({
   textoCancelar = "Cancelar",
   enviando = false,
   onSubmit,
+  className,
   children,
 }: {
   abierto: boolean;
@@ -46,6 +47,8 @@ export function FormDialog({
   textoCancelar?: string;
   enviando?: boolean;
   onSubmit: React.FormEventHandler<HTMLFormElement>;
+  /** Ancho del diálogo, para formularios con campos más anchos que un input. */
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -60,16 +63,20 @@ export function FormDialog({
       }}
     >
       <DialogTrigger render={trigger} />
-      <DialogContent>
+      <DialogContent className={className}>
         <DialogHeader>
           <DialogTitle>{titulo}</DialogTitle>
           {descripcion && <DialogDescription>{descripcion}</DialogDescription>}
         </DialogHeader>
 
         {/* `noValidate` deja la validación en manos de Zod: los mensajes del
-            navegador no se pueden traducir ni dar estilo. */}
-        <form onSubmit={onSubmit} className="space-y-4" noValidate>
-          {children}
+            navegador no se pueden traducir ni dar estilo. El cuerpo scrollea
+            aparte de la cabecera y el pie: un campo que crece mucho (p. ej. un
+            currículum largo) no debe empujar los botones fuera de pantalla. */}
+        <form onSubmit={onSubmit} className="contents" noValidate>
+          <div className="max-h-[min(60vh,32rem)] space-y-4 overflow-y-auto px-0.5 py-0.5">
+            {children}
+          </div>
 
           <DialogFooter>
             <DialogClose

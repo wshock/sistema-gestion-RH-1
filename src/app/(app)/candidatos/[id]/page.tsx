@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
 
 import { CandidateDetailActions } from "@/features/candidatos/components/CandidateDetailActions";
+import { CandidateResume } from "@/features/candidatos/components/CandidateResume";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatearCurriculum } from "@/features/candidatos/resume";
 import { requireSessionUser } from "@/lib/session";
 import { candidateIdSchema } from "@/features/candidatos/schemas";
 import { getCandidateDetail } from "@/features/candidatos/services/read.service";
@@ -75,20 +75,12 @@ export default async function CandidatoPage({
       </div>
 
       <Card className="bg-card/60 backdrop-blur-xl">
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           <h3 className="font-heading text-sm font-semibold tracking-tight">
             Currículum
           </h3>
 
-          {candidato.resume ? (
-            <p className="text-foreground text-sm break-words whitespace-pre-line">
-              {formatearCurriculum(candidato.resume)}
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Este candidato no tiene un currículum registrado.
-            </p>
-          )}
+          <CandidateResume resume={candidato.resume} />
         </CardContent>
       </Card>
     </div>
