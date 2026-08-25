@@ -1,0 +1,104 @@
+"use client";
+
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+import {
+  createCandidateAction,
+  updateCandidateAction,
+} from "@/features/candidatos/actions/candidate";
+import { FormDialog } from "@/components/shared/FormDialog";
+import { FormField } from "@/components/shared/FormField";
+import { Textarea } from "@/components/ui/textarea";
+import { candidateInputSchema, type CandidateInput } from "@/features/candidatos/schemas";
+
+type Candidato = { jobCandidateId: number; resume: string | null };
+
+/**
+ * Formulario de alta y edición.
+ *
+ * Un solo campo porque `JobCandidate` no tiene más datos propios que el
+ * currículum (ver `docs`, y `types.ts` del módulo). Valida en el cliente con
+ * el mismo esquema que usa la Server Action; la que decide es la del
+ * servidor, porque esta se puede saltar.
+ */
+export function CandidateFormDialog({
+  candidato,
+  trigger,
+}: {
+  candidato?: Candidato;
+  trigger: React.ReactElement;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const esEdicion = candidato !== undefined;
+
+  const valoresIniciales = {
+    resume: candidato?.resume ?? "",
+  };
+
+  const form = useForm<CandidateInput>({
+    resolver: zodResolver(candidateInputSchema),
+    defaultValues: valoresIniciales,
+  });
+
+  const {
+    formState: { errors, isSubmitting },
+  } = form;
+
+  async function alEnviar(valores: CandidateInput) {
+    const resultado = esEdicion
+      ? await updateCandidateAction(candidato.jobCandidateId, valores)
+      : await createCandidateAction(valores);
+
+    if (resultado.success) {
+      toast.success(esEdicion ? "Candidato actualizado." : "Candidato creado.");
+      setAbierto(false);
+      form.reset(esEdicion ? valores : valoresIniciales);
+
+      return;
+    }
+
+    // Los errores por campo se pintan junto al input que los provocó; el resto
+    // llega como aviso general.
+    const { error } = resultado;
+
+    if (error.fieldErrors?.resume) {
+      form.setError("resume", { message: error.fieldErrors.resume[0] });
+    }
+
+    toast.error(error.message);
+  }
+
+  return (
+    <FormDialog
+      abierto={abierto}
+      onAbiertoChange={(nuevoEstado) => {
+        setAbierto(nuevoEstado);
+
+        // Al cerrar se descarta lo tecleado: la próxima apertura debe partir
+        // de los datos reales, no de una edición a medias.
+        if (!nuevoEstado) {
+          form.reset(valoresIniciales);
+        }
+      }}
+      trigger={trigger}
+      titulo={esEdicion ? "Editar candidato" : "Nuevo candidato"}
+      descripcion={
+        esEdicion
+          ? "Modificá el currículum registrado."
+          : "Registrá el currículum del aspirante."
+      }
+      textoEnviar={esEdicion ? "Guardar cambios" : "Crear candidato"}
+      enviando={isSubmitting}
+      onSubmit={form.handleSubmit(alEnviar)}
+    >
+      <FormField id="resume" label="Currículum" error={errors.resume?.message}>
+        {(props) => (
+          <Textarea rows={12} autoFocus {...props} {...form.register("resume")} />
+        )}
+      </FormField>
+    </FormDialog>
+  );
+}

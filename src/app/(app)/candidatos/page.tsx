@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PlusIcon } from "lucide-react";
 
+import { CandidateFormDialog } from "@/features/candidatos/components/CandidateFormDialog";
 import { CandidateStatusFilter } from "@/features/candidatos/components/CandidateStatusFilter";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Pagination } from "@/components/shared/Pagination";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CandidateListItem } from "@/features/candidatos/types";
 import { requireSessionUser } from "@/lib/session";
@@ -71,11 +74,24 @@ export default async function CandidatosPage({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">Candidatos</h2>
-        <p className="text-muted-foreground text-sm">
-          Aspirantes registrados y su currículum, migrados desde AdventureWorks.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-heading text-2xl font-semibold tracking-tight">
+            Candidatos
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Aspirantes registrados y su currículum, migrados desde AdventureWorks.
+          </p>
+        </div>
+
+        <CandidateFormDialog
+          trigger={
+            <Button>
+              <PlusIcon />
+              Nuevo candidato
+            </Button>
+          }
+        />
       </div>
 
       <CandidateStatusFilter estado={query.estado} />
