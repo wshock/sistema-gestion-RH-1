@@ -1,7 +1,15 @@
+import { cache } from "react";
+
 import * as employeeData from "@/features/empleados/data/read";
-import type { EmployeeListItem } from "@/features/empleados/types";
-import { ok, unexpected, type Result } from "@/lib/result";
+import type {
+  EmployeeDetail,
+  EmployeeListItem,
+  Gender,
+  MaritalStatus,
+} from "@/features/empleados/types";
+import { fail, ok, unexpected, type Result } from "@/lib/result";
 import { TAMANO_PAGINA, type EmployeeQuery } from "@/features/empleados/schemas";
+import { currentAssignment, currentPay } from "@/features/empleados/vigencia";
 
 /**
  * Reglas de negocio de la lectura de empleados.
@@ -37,4 +45,55 @@ export async function getEmployeePage({
   } catch (error) {
     return unexpected("getEmployeePage", error);
   }
+}
+
+/**
+ * Ficha de un empleado: datos propios, historiales y situación vigente.
+ *
+ * Va envuelta en `cache` para que la página y `generateMetadata` no disparen
+ * la misma consulta dos veces en un mismo render.
+ */
+export const getEmployeeDetail = cache(
+  async (businessEntityId: number): Promise<Result<EmployeeDetail>> => {
+    try {
+      const empleado = await employeeData.findEmployeeById(businessEntityId);
+
+      if (!empleado) {
+        return fail("NO_ENCONTRADO", "El empleado solicitado no existe.");
+      }
+
+      const [assignmentHistory, payHistory] = await Promise.all([
+        employeeData.listAssignmentHistory(businessEntityId),
+        employeeData.listPayHistory(businessEntityId),
+      ]);
+
+      return ok({
+        ...empleado,
+        maritalStatus: comoEstadoCivil(empleado.maritalStatus),
+        gender: comoGenero(empleado.gender),
+        currentAssignment: currentAssignment(assignmentHistory),
+        currentPay: currentPay(payHistory),
+        assignmentHistory,
+        payHistory,
+      });
+    } catch (error) {
+      return unexpected("getEmployeeDetail", error);
+    }
+  },
+);
+
+function comoEstadoCivil(valor: string): MaritalStatus {
+  if (valor === "S" || valor === "M") {
+    return valor;
+  }
+
+  throw new Error(`maritalStatus inesperado: ${valor}`);
+}
+
+function comoGenero(valor: string): Gender {
+  if (valor === "M" || valor === "F") {
+    return valor;
+  }
+
+  throw new Error(`gender inesperado: ${valor}`);
 }
