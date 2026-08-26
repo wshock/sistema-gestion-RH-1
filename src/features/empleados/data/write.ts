@@ -198,3 +198,22 @@ export function updateEmployee(
     return { businessEntityId };
   });
 }
+
+/**
+ * Cambia el indicador de empleado activo. Baja y reactivación son la misma
+ * escritura con el booleano invertido: no hay una tabla de baja aparte, ni
+ * falta —`currentFlag` es exactamente para esto—.
+ *
+ * Toca una sola columna de una sola tabla: no hace falta transacción, y no
+ * borra ni toca ningún historial.
+ */
+export function setEmployeeStatus(
+  businessEntityId: number,
+  currentFlag: boolean,
+): Promise<EmployeeWriteRow> {
+  return prisma.employee.update({
+    where: { businessEntityId },
+    data: { currentFlag, modifiedDate: new Date() },
+    select: { businessEntityId: true },
+  });
+}
