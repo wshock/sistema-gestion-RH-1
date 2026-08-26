@@ -87,3 +87,32 @@ export async function updateEmployeeAction(
 
   return resultado;
 }
+
+/**
+ * Baja lógica y reactivación: la misma acción con el booleano invertido, ver
+ * `write.service.ts`. No lleva Zod para el segundo parámetro porque no viene
+ * de un formulario, sino de un botón cuyo estado ya conoce la ficha.
+ */
+export async function setEmployeeStatusAction(
+  id: unknown,
+  currentFlag: boolean,
+): Promise<Result<EmployeeWriteRow>> {
+  if (!(await getSessionUser())) {
+    return fail("NO_AUTORIZADO", SIN_SESION);
+  }
+
+  const parsedId = employeeIdSchema.safeParse(id);
+
+  if (!parsedId.success) {
+    return fail("VALIDACION", "Identificador de empleado inválido.");
+  }
+
+  const resultado = await employeeService.setEmployeeStatus(parsedId.data, currentFlag);
+
+  if (resultado.success) {
+    revalidatePath(RUTA);
+    revalidatePath(`${RUTA}/${parsedId.data}`);
+  }
+
+  return resultado;
+}

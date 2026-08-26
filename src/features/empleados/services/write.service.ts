@@ -106,3 +106,23 @@ export async function updateEmployee(
     return unexpected("updateEmployee", error);
   }
 }
+
+/**
+ * Baja y reactivación son la misma operación de negocio: no hay más regla
+ * que "el empleado tiene que existir". No se comprueba el estado actual
+ * porque no hay nada malo en confirmar dos veces la misma baja.
+ */
+export async function setEmployeeStatus(
+  businessEntityId: number,
+  currentFlag: boolean,
+): Promise<Result<EmployeeWriteRow>> {
+  try {
+    if (!(await employeeData.employeeExists(businessEntityId))) {
+      return fail("NO_ENCONTRADO", "El empleado que intentás actualizar ya no existe.");
+    }
+
+    return ok(await employeeData.setEmployeeStatus(businessEntityId, currentFlag));
+  } catch (error) {
+    return unexpected("setEmployeeStatus", error);
+  }
+}
