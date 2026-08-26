@@ -1,5 +1,8 @@
 import { prisma } from "@/data/prisma";
-import type { EmployeeCreateInput } from "@/features/empleados/schemas";
+import type {
+  EmployeeCreateInput,
+  EmployeeEditInput,
+} from "@/features/empleados/schemas";
 
 /**
  * Escritura de empleados.
@@ -60,6 +63,12 @@ export function departmentExists(departmentId: number): Promise<boolean> {
 export function shiftExists(shiftId: number): Promise<boolean> {
   return prisma.shift
     .findUnique({ where: { shiftId }, select: { shiftId: true } })
+    .then((fila) => fila !== null);
+}
+
+export function employeeExists(businessEntityId: number): Promise<boolean> {
+  return prisma.employee
+    .findUnique({ where: { businessEntityId }, select: { businessEntityId: true } })
     .then((fila) => fila !== null);
 }
 
@@ -131,6 +140,57 @@ export function createEmployee(input: EmployeeCreateInput): Promise<EmployeeWrit
         rateChangeDate: contratacion,
         rate: input.rate,
         payFrequency: input.payFrequency,
+        modifiedDate: ahora,
+      },
+    });
+
+    return { businessEntityId };
+  });
+}
+
+/**
+ * Actualiza los datos propios de la persona y del empleado, en una
+ * transacción porque son dos tablas que deben quedar coherentes entre sí.
+ *
+ * No incluye `departmentId`, `shiftId` ni `rate`: `EmployeeEditInput` no los
+ * declara, así que no hay forma de que esta función los toque por accidente.
+ * Esos cambian por traslado y cambio salarial, que dejan historial —editarlos
+ * junto con el resto de la ficha lo destruiría—.
+ */
+export function updateEmployee(
+  businessEntityId: number,
+  input: EmployeeEditInput,
+): Promise<EmployeeWriteRow> {
+  const nacimiento = fechaDeCalendario(input.birthDate);
+  const contratacion = fechaDeCalendario(input.hireDate);
+  const ahora = new Date();
+
+  return prisma.$transaction(async (tx) => {
+    await tx.person.update({
+      where: { businessEntityId },
+      data: {
+        title: input.title,
+        firstName: input.firstName,
+        middleName: input.middleName,
+        lastName: input.lastName,
+        suffix: input.suffix,
+        modifiedDate: ahora,
+      },
+    });
+
+    await tx.employee.update({
+      where: { businessEntityId },
+      data: {
+        nationalIdNumber: input.nationalIdNumber,
+        loginId: input.loginId,
+        jobTitle: input.jobTitle,
+        birthDate: nacimiento,
+        maritalStatus: input.maritalStatus,
+        gender: input.gender,
+        hireDate: contratacion,
+        salariedFlag: input.salariedFlag,
+        vacationHours: input.vacationHours,
+        sickLeaveHours: input.sickLeaveHours,
         modifiedDate: ahora,
       },
     });

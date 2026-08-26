@@ -1,6 +1,9 @@
 import * as employeeData from "@/features/empleados/data/write";
 import { fail, ok, unexpected, type Result } from "@/lib/result";
-import type { EmployeeCreateInput } from "@/features/empleados/schemas";
+import type {
+  EmployeeCreateInput,
+  EmployeeEditInput,
+} from "@/features/empleados/schemas";
 import type { EmployeeWriteRow } from "@/features/empleados/data/write";
 
 /**
@@ -55,5 +58,51 @@ export async function createEmployee(
     return ok(await employeeData.createEmployee(input));
   } catch (error) {
     return unexpected("createEmployee", error);
+  }
+}
+
+/**
+ * La unicidad de documento y usuario se vuelve a comprobar acá, excluyendo al
+ * propio empleado: sin eso, guardar la ficha sin cambiar el documento se
+ * marcaría a sí misma como duplicada.
+ */
+export async function updateEmployee(
+  businessEntityId: number,
+  input: EmployeeEditInput,
+): Promise<Result<EmployeeWriteRow>> {
+  try {
+    if (!(await employeeData.employeeExists(businessEntityId))) {
+      return fail("NO_ENCONTRADO", "El empleado que intentás editar ya no existe.");
+    }
+
+    const documentoRepetido = await employeeData.findEmployeeIdByNationalId(
+      input.nationalIdNumber,
+      businessEntityId,
+    );
+
+    if (documentoRepetido !== null) {
+      return fail(
+        "DUPLICADO",
+        `Ya existe un empleado con el documento "${input.nationalIdNumber}".`,
+        { nationalIdNumber: ["Ese documento ya está en uso."] },
+      );
+    }
+
+    const usuarioRepetido = await employeeData.findEmployeeIdByLoginId(
+      input.loginId,
+      businessEntityId,
+    );
+
+    if (usuarioRepetido !== null) {
+      return fail(
+        "DUPLICADO",
+        `Ya existe un empleado con el usuario "${input.loginId}".`,
+        { loginId: ["Ese usuario de red ya está en uso."] },
+      );
+    }
+
+    return ok(await employeeData.updateEmployee(businessEntityId, input));
+  } catch (error) {
+    return unexpected("updateEmployee", error);
   }
 }
