@@ -1,19 +1,58 @@
+import Link from "next/link";
+import { EyeIcon, PencilIcon, Trash2Icon, UserCheckIcon } from "lucide-react";
+
+import { EmployeeStatusAction } from "@/features/empleados/components/EmployeeStatusAction";
+import { Button } from "@/components/ui/button";
 import type { EmployeeListItem } from "@/features/empleados/types";
 
 /**
- * Punto de montaje: acciones de cada fila del listado (editar y baja lógica).
+ * Acciones de cada fila del listado: ver ficha, editar y dar de baja o
+ * reactivar. Solo íconos —a diferencia de `EmployeeDetailActions`, que tiene
+ * el espacio y el contexto para llevar rótulo—.
  *
- * ⚠️ Marcador de posición. Lo implementa la feature de escritura (HU-23);
- * hasta entonces devuelve `null` y la columna de acciones queda vacía.
- *
- * Recibe la fila completa —no solo el id— para poder precargar el formulario
- * de edición y rotular la confirmación de baja con el nombre del empleado,
- * sin volver a consultar.
- *
- * Ver `docs/acuerdo-empleados.md`.
+ * "Eliminar" es, para empleados, dar de baja: acá no hay borrado físico (ver
+ * HU-28 y `docs/acuerdo-empleados.md`), así que el tacho dispara la misma
+ * confirmación que la ficha, solo que como ícono.
  */
 export function EmployeeRowActions({ empleado }: { empleado: EmployeeListItem }) {
-  void empleado;
+  const nombre = `${empleado.lastName}, ${empleado.firstName}`;
 
-  return null;
+  return (
+    <div className="flex justify-end gap-1">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label={`Ver ficha de ${nombre}`}
+        render={<Link href={`/empleados/${empleado.businessEntityId}`} />}
+      >
+        <EyeIcon />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label={`Editar ${nombre}`}
+        render={<Link href={`/empleados/${empleado.businessEntityId}/editar`} />}
+      >
+        <PencilIcon />
+      </Button>
+
+      <EmployeeStatusAction
+        businessEntityId={empleado.businessEntityId}
+        nombre={nombre}
+        currentFlag={empleado.currentFlag}
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={
+              empleado.currentFlag ? `Dar de baja a ${nombre}` : `Reactivar a ${nombre}`
+            }
+          >
+            {empleado.currentFlag ? <Trash2Icon /> : <UserCheckIcon />}
+          </Button>
+        }
+      />
+    </div>
+  );
 }

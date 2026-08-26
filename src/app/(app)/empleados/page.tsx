@@ -103,11 +103,7 @@ export default async function EmpleadosPage({
       id: "acciones",
       header: "Acciones",
       className: "w-0 text-right",
-      cell: (empleado) => (
-        <div className="flex justify-end gap-1">
-          <EmployeeRowActions empleado={empleado} />
-        </div>
-      ),
+      cell: (empleado) => <EmployeeRowActions empleado={empleado} />,
     },
   ];
 
