@@ -6,7 +6,11 @@ import { z } from "zod";
 import type { EmployeeWriteRow } from "@/features/empleados/data/write";
 import { fail, type Result } from "@/lib/result";
 import { getSessionUser } from "@/lib/session";
-import { employeeCreateSchema } from "@/features/empleados/schemas";
+import {
+  employeeCreateSchema,
+  employeeEditSchema,
+  employeeIdSchema,
+} from "@/features/empleados/schemas";
 import * as employeeService from "@/features/empleados/services/write.service";
 
 /**
@@ -49,6 +53,36 @@ export async function createEmployeeAction(
   if (resultado.success) {
     revalidatePath(RUTA);
     revalidatePath(`${RUTA}/${resultado.data.businessEntityId}`);
+  }
+
+  return resultado;
+}
+
+export async function updateEmployeeAction(
+  id: unknown,
+  input: unknown,
+): Promise<Result<EmployeeWriteRow>> {
+  if (!(await getSessionUser())) {
+    return fail("NO_AUTORIZADO", SIN_SESION);
+  }
+
+  const parsedId = employeeIdSchema.safeParse(id);
+
+  if (!parsedId.success) {
+    return fail("VALIDACION", "Identificador de empleado inválido.");
+  }
+
+  const parsed = employeeEditSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return fail("VALIDACION", DATOS_INVALIDOS, erroresPorCampo(parsed.error));
+  }
+
+  const resultado = await employeeService.updateEmployee(parsedId.data, parsed.data);
+
+  if (resultado.success) {
+    revalidatePath(RUTA);
+    revalidatePath(`${RUTA}/${parsedId.data}`);
   }
 
   return resultado;

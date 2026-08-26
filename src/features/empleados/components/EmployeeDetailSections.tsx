@@ -97,9 +97,15 @@ export function EmployeeDetailSections({ empleado }: { empleado: EmployeeDetail 
 
       <Card className="bg-card/60 backdrop-blur-xl">
         <CardContent className="space-y-4">
-          <h3 className="font-heading text-sm font-semibold tracking-tight">
-            Situación vigente
-          </h3>
+          <div>
+            <h3 className="font-heading text-sm font-semibold tracking-tight">
+              Situación vigente
+            </h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Departamento, turno y salario se gestionan con traslado y cambio salarial,
+              no con la edición de esta ficha: así queda su historial.
+            </p>
+          </div>
 
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Campo
