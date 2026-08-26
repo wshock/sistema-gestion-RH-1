@@ -8,28 +8,34 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 
 /**
- * Baja lógica y reactivación desde la ficha.
+ * Baja lógica y reactivación, usable desde la ficha (botón con rótulo) o
+ * desde la fila del listado (ícono, vía `trigger`).
  *
- * Un solo componente para las dos direcciones: el botón, el texto de
- * confirmación y la acción a llamar dependen todos de `currentFlag`, así que
- * separarlos en dos componentes solo duplicaría la lógica.
+ * Un solo componente para las dos direcciones: el texto de confirmación y la
+ * acción a llamar dependen todos de `currentFlag`, así que separarlos en dos
+ * componentes solo duplicaría la lógica.
  */
 export function EmployeeStatusAction({
   businessEntityId,
   nombre,
   currentFlag,
+  trigger,
 }: {
   businessEntityId: number;
   nombre: string;
   currentFlag: boolean;
+  /** Disparador del diálogo. Por defecto, el botón con rótulo de la ficha. */
+  trigger?: React.ReactElement;
 }) {
   return (
     <ConfirmDialog
       trigger={
-        <Button variant="outline" size="sm">
-          {currentFlag ? <UserXIcon /> : <UserCheckIcon />}
-          {currentFlag ? "Dar de baja" : "Reactivar"}
-        </Button>
+        trigger ?? (
+          <Button variant="outline" size="sm">
+            {currentFlag ? <UserXIcon /> : <UserCheckIcon />}
+            {currentFlag ? "Dar de baja" : "Reactivar"}
+          </Button>
+        )
       }
       titulo={currentFlag ? "Dar de baja al empleado" : "Reactivar empleado"}
       descripcion={
