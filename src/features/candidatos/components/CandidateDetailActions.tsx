@@ -32,7 +32,12 @@ export function CandidateDetailActions({ candidato }: { candidato: CandidateDeta
       </Button>
 
       <CandidateFormDialog
-        candidato={{ jobCandidateId: candidato.jobCandidateId, resume: candidato.resume }}
+        candidato={{
+          jobCandidateId: candidato.jobCandidateId,
+          firstName: candidato.firstName,
+          lastName: candidato.lastName,
+          resume: candidato.resume,
+        }}
         trigger={
           <Button variant="outline" size="sm">
             <PencilIcon />

@@ -88,10 +88,17 @@ model EmployeePayHistory {
   @@schema("humanresources")
 }
 
+/// `firstname`/`lastname` no son de AdventureWorks: se agregaron para que el
+/// candidato tenga nombre propio en vez de depender de que su currículum lo
+/// traiga como XML libre (ver `migration/add_jobcandidate_name_columns.sql`).
+/// Nullable porque la tabla es externa a Prisma Migrate y no lleva `NOT
+/// NULL` en la base; la obligatoriedad la exige `candidateInputSchema`.
 model JobCandidate {
   jobCandidateId   Int       @id(map: "pk_jobcandidate_jobcandidateid") @default(autoincrement()) @map("jobcandidateid")
   businessEntityId Int?      @map("businessentityid")
   resume           String?
+  firstName        String?   @map("firstname")
+  lastName         String?   @map("lastname")
   modifiedDate     DateTime  @default(now()) @map("modifieddate") @db.Timestamptz(6)
   employee         Employee? @relation(fields: [businessEntityId], references: [businessEntityId], onDelete: NoAction, onUpdate: NoAction, map: "fk_jobcandidate_employee_businessentityid")
 
