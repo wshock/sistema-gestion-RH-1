@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { BriefcaseIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { CandidateFormDialog } from "@/features/candidatos/components/CandidateFormDialog";
 import { CandidateStatusFilter } from "@/features/candidatos/components/CandidateStatusFilter";
@@ -71,22 +71,36 @@ export default async function CandidatosPage({
             Ver currículum
           </Link>
 
-          {/* Un candidato contratado no se elimina: rompería la trazabilidad
-              de su contratación. */}
+          {/* Un candidato contratado no inicia el proceso de nuevo, ni se
+              edita ni se elimina: rompería la trazabilidad de su
+              contratación. */}
           {candidato.status === "pendiente" && (
-            <DeleteCandidateDialog
-              jobCandidateId={candidato.jobCandidateId}
-              nombre={candidato.name ?? `Candidato #${candidato.jobCandidateId}`}
-              trigger={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`Eliminar ${candidato.name ?? `candidato #${candidato.jobCandidateId}`}`}
-                >
-                  <Trash2Icon />
-                </Button>
-              }
-            />
+            <>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Contratar a ${candidato.name ?? `candidato #${candidato.jobCandidateId}`}`}
+                render={
+                  <Link href={`/candidatos/${candidato.jobCandidateId}/contratar`} />
+                }
+              >
+                <BriefcaseIcon />
+              </Button>
+
+              <DeleteCandidateDialog
+                jobCandidateId={candidato.jobCandidateId}
+                nombre={candidato.name ?? `Candidato #${candidato.jobCandidateId}`}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Eliminar ${candidato.name ?? `candidato #${candidato.jobCandidateId}`}`}
+                  >
+                    <Trash2Icon />
+                  </Button>
+                }
+              />
+            </>
           )}
         </div>
       ),

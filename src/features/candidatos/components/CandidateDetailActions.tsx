@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PencilIcon, Trash2Icon } from "lucide-react";
+import { BriefcaseIcon, PencilIcon, Trash2Icon } from "lucide-react";
 
 import { CandidateFormDialog } from "@/features/candidatos/components/CandidateFormDialog";
 import { DeleteCandidateDialog } from "@/features/candidatos/components/DeleteCandidateDialog";
@@ -9,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import type { CandidateDetail } from "@/features/candidatos/types";
 
 /**
- * Editar y eliminar desde la ficha. Un candidato contratado no aparece con
- * ninguno de los dos: ni se edita ni se elimina, porque ambos afectarían la
- * trazabilidad de una contratación ya decidida.
+ * Contratar, editar y eliminar desde la ficha. Un candidato contratado no
+ * aparece con ninguna de las tres: ya no hay proceso que iniciar, y editar o
+ * eliminar afectarían la trazabilidad de una contratación ya decidida.
  */
 export function CandidateDetailActions({ candidato }: { candidato: CandidateDetail }) {
   const router = useRouter();
@@ -22,6 +23,14 @@ export function CandidateDetailActions({ candidato }: { candidato: CandidateDeta
 
   return (
     <div className="flex items-center gap-2">
+      <Button
+        size="sm"
+        render={<Link href={`/candidatos/${candidato.jobCandidateId}/contratar`} />}
+      >
+        <BriefcaseIcon />
+        Contratar
+      </Button>
+
       <CandidateFormDialog
         candidato={{ jobCandidateId: candidato.jobCandidateId, resume: candidato.resume }}
         trigger={
