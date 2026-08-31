@@ -4,25 +4,29 @@ import type { CandidateInput } from "@/features/candidatos/schemas";
 /**
  * Escritura sobre `humanresources.jobcandidate`.
  *
- * Una sola tabla, un solo campo propio (`resume`): no hace falta transacción.
+ * Una sola tabla: no hace falta transacción.
  */
 
 export type CandidateWriteRow = { jobCandidateId: number };
 
-export function createCandidate({ resume }: CandidateInput): Promise<CandidateWriteRow> {
+export function createCandidate({
+  firstName,
+  lastName,
+  resume,
+}: CandidateInput): Promise<CandidateWriteRow> {
   return prisma.jobCandidate.create({
-    data: { resume, modifiedDate: new Date() },
+    data: { firstName, lastName, resume, modifiedDate: new Date() },
     select: { jobCandidateId: true },
   });
 }
 
 export function updateCandidate(
   jobCandidateId: number,
-  { resume }: CandidateInput,
+  { firstName, lastName, resume }: CandidateInput,
 ): Promise<CandidateWriteRow> {
   return prisma.jobCandidate.update({
     where: { jobCandidateId },
-    data: { resume, modifiedDate: new Date() },
+    data: { firstName, lastName, resume, modifiedDate: new Date() },
     select: { jobCandidateId: true },
   });
 }

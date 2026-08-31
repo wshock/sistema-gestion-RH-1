@@ -91,26 +91,6 @@ function limpiarFecha(fecha: string | null): string | null {
   return fecha ? fecha.replace(/Z$/, "").trim() || null : null;
 }
 
-/**
- * "Apellido, Nombre" a partir de `ns:Name.First`/`ns:Name.Last`. `null` si
- * ninguno de los dos aparece en el currículum —incluye el texto plano nuevo,
- * que no trae ninguna etiqueta—.
- */
-export function extraerNombreDeCurriculum(resume: string | null): string | null {
-  if (!resume) {
-    return null;
-  }
-
-  const nombre = extraerCampoCorto(resume, "Name.First");
-  const apellido = extraerCampoCorto(resume, "Name.Last");
-
-  if (!nombre && !apellido) {
-    return null;
-  }
-
-  return [apellido, nombre].filter(Boolean).join(", ");
-}
-
 export type ExperienciaLaboral = {
   cargo: string | null;
   empresa: string | null;
@@ -130,7 +110,6 @@ export type Educacion = {
 export type CurriculumParseado =
   | {
       tipo: "estructurado";
-      nombre: string | null;
       habilidades: string | null;
       experiencia: ExperienciaLaboral[];
       educacion: Educacion[];
@@ -185,7 +164,6 @@ function ubicacionDe(bloque: string): string | null {
  * de línea normalizados: no hay nada que estructurar.
  */
 export function parsearCurriculum(resume: string): CurriculumParseado {
-  const nombre = extraerNombreDeCurriculum(resume);
   const habilidades = extraerCampoLargo(resume, "Skills");
 
   const bloques = extraerBloques(resume);
@@ -218,7 +196,7 @@ export function parsearCurriculum(resume: string): CurriculumParseado {
     return { tipo: "texto", contenido: formatearCurriculumComoTexto(resume) };
   }
 
-  return { tipo: "estructurado", nombre, habilidades, experiencia, educacion };
+  return { tipo: "estructurado", habilidades, experiencia, educacion };
 }
 
 /**

@@ -11,19 +11,26 @@ import {
 } from "@/features/candidatos/actions/candidate";
 import { FormDialog } from "@/components/shared/FormDialog";
 import { FormField } from "@/components/shared/FormField";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatearCurriculumComoTexto } from "@/features/candidatos/resume";
 import { candidateInputSchema, type CandidateInput } from "@/features/candidatos/schemas";
 
-type Candidato = { jobCandidateId: number; resume: string | null };
+type Candidato = {
+  jobCandidateId: number;
+  firstName: string | null;
+  lastName: string | null;
+  resume: string | null;
+};
 
 /**
  * Formulario de alta y edición.
  *
- * Un solo campo porque `JobCandidate` no tiene más datos propios que el
- * currículum (ver `docs`, y `types.ts` del módulo). Valida en el cliente con
- * el mismo esquema que usa la Server Action; la que decide es la del
- * servidor, porque esta se puede saltar.
+ * Nombre y apellido son campos propios del candidato (ver `types.ts` del
+ * módulo): no se intentan adivinar a partir del currículum, que es texto
+ * libre y no siempre trae de dónde sacarlos. Valida en el cliente con el
+ * mismo esquema que usa la Server Action; la que decide es la del servidor,
+ * porque esta se puede saltar.
  */
 export function CandidateFormDialog({
   candidato,
@@ -36,6 +43,8 @@ export function CandidateFormDialog({
   const esEdicion = candidato !== undefined;
 
   const valoresIniciales = {
+    firstName: candidato?.firstName ?? "",
+    lastName: candidato?.lastName ?? "",
     // Nunca se precarga el XML crudo de un currículum migrado: se muestra ya
     // reducido a texto plano, tanto por legibilidad como porque una etiqueta
     // sin espacios era, literalmente, la palabra más larga del campo —de ahí
@@ -69,8 +78,12 @@ export function CandidateFormDialog({
     // llega como aviso general.
     const { error } = resultado;
 
-    if (error.fieldErrors?.resume) {
-      form.setError("resume", { message: error.fieldErrors.resume[0] });
+    if (error.fieldErrors) {
+      for (const [campo, mensajes] of Object.entries(error.fieldErrors)) {
+        if (campo === "firstName" || campo === "lastName" || campo === "resume") {
+          form.setError(campo, { message: mensajes[0] });
+        }
+      }
     }
 
     toast.error(error.message);
@@ -92,19 +105,28 @@ export function CandidateFormDialog({
       titulo={esEdicion ? "Editar candidato" : "Nuevo candidato"}
       descripcion={
         esEdicion
-          ? "Modificá el currículum registrado."
-          : "Registrá el currículum del aspirante."
+          ? "Modificá los datos del candidato."
+          : "Registrá al aspirante y su currículum."
       }
       textoEnviar={esEdicion ? "Guardar cambios" : "Crear candidato"}
       enviando={isSubmitting}
       onSubmit={form.handleSubmit(alEnviar)}
       className="sm:max-w-lg"
     >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormField id="firstName" label="Nombre" error={errors.firstName?.message}>
+          {(props) => <Input autoFocus {...props} {...form.register("firstName")} />}
+        </FormField>
+
+        <FormField id="lastName" label="Apellido" error={errors.lastName?.message}>
+          {(props) => <Input {...props} {...form.register("lastName")} />}
+        </FormField>
+      </div>
+
       <FormField id="resume" label="Currículum" error={errors.resume?.message}>
         {(props) => (
           <Textarea
             rows={12}
-            autoFocus
             // Alto acotado con scroll propio: un currículum de miles de
             // caracteres no debe estirar el campo —ni el diálogo— sin límite.
             className="max-h-80 resize-y overflow-y-auto wrap-break-word whitespace-pre-wrap"

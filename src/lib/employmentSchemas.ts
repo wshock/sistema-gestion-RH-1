@@ -2,8 +2,9 @@ import { z } from "zod";
 
 /**
  * Validación de campos de dominio laboral, compartida por `empleados` (alta y
- * edición) y `candidatos` (contratación, HU-29): documento, cargo, fechas de
- * nacimiento/contratación y su coherencia entre sí, y selects de catálogo.
+ * edición) y `candidatos` (alta y contratación): nombre, documento, cargo,
+ * fechas de nacimiento/contratación y su coherencia entre sí, y selects de
+ * catálogo.
  *
  * Vive acá y no en ninguno de los dos módulos porque "un módulo no importa de
  * otro" (ver `features/README.md`), y las dos features declaran exactamente
@@ -15,6 +16,7 @@ import { z } from "zod";
 // pero se respetan para no divergir del modelo original.
 export const LARGO_DOCUMENTO = 15;
 export const LARGO_CARGO = 50;
+export const LARGO_NOMBRE = 50;
 
 /** Edad mínima admitida en la fecha de contratación. */
 const EDAD_MINIMA = 18;

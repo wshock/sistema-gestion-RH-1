@@ -5,6 +5,7 @@ import {
   idSchema,
   LARGO_CARGO,
   LARGO_DOCUMENTO,
+  LARGO_NOMBRE,
   textoObligatorio,
   validarFechas,
 } from "@/lib/employmentSchemas";
@@ -29,7 +30,6 @@ import {
 // Largos de AdventureWorks. Las columnas quedaron como `text` en PostgreSQL,
 // pero se respetan para no divergir del modelo original.
 const LARGO = {
-  nombre: 50,
   titulo: 8,
   sufijo: 10,
   usuario: 256,
@@ -63,9 +63,9 @@ const horasSchema = (campo: string) =>
 const camposDeEmpleado = {
   // Persona
   title: textoOpcional("El tratamiento", LARGO.titulo),
-  firstName: textoObligatorio("El nombre", LARGO.nombre),
-  middleName: textoOpcional("El segundo nombre", LARGO.nombre),
-  lastName: textoObligatorio("El apellido", LARGO.nombre),
+  firstName: textoObligatorio("El nombre", LARGO_NOMBRE),
+  middleName: textoOpcional("El segundo nombre", LARGO_NOMBRE),
+  lastName: textoObligatorio("El apellido", LARGO_NOMBRE),
   suffix: textoOpcional("El sufijo", LARGO.sufijo),
 
   // Empleado

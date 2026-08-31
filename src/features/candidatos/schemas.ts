@@ -5,6 +5,7 @@ import {
   idSchema,
   LARGO_CARGO,
   LARGO_DOCUMENTO,
+  LARGO_NOMBRE,
   textoObligatorio,
   validarFechas,
 } from "@/lib/employmentSchemas";
@@ -25,11 +26,15 @@ const LARGO_MAXIMO_CURRICULUM = 8000;
 /**
  * Alta y edición de un candidato.
  *
- * `JobCandidate` no tiene más campos propios que el currículum —el nombre,
- * cuando existe, sale de otro lado (ver `types.ts`)—, así que es todo lo que
- * pide el formulario.
+ * `firstName`/`lastName` son campos propios de `JobCandidate` —no se
+ * extraen del currículum—: un currículum es texto libre, y depender de que
+ * traiga las etiquetas justas para reconstruir un nombre es exactamente el
+ * problema que este esquema evita. Ver
+ * `migration/add_jobcandidate_name_columns.sql`.
  */
 export const candidateInputSchema = z.object({
+  firstName: textoObligatorio("El nombre", LARGO_NOMBRE),
+  lastName: textoObligatorio("El apellido", LARGO_NOMBRE),
   resume: z
     .string({ error: "El currículum es obligatorio." })
     .trim()
@@ -58,15 +63,15 @@ export const candidateIdSchema = z.coerce
   .positive({ error: "Identificador inválido." });
 
 /**
- * Condiciones de contratación (HU-29).
+ * Condiciones de contratación (HU-29/HU-30).
  *
- * Son exactamente los campos que `JobCandidate` no tiene: el nombre viene del
- * candidato (currículum o, si ya fue contratado, `Person`), pero documento,
- * cargo, fechas, departamento, turno y salario no existen en su registro
- * hasta que se completan acá. La ejecución de la contratación —crear
- * `Person`/`Employee`, la asignación y el salario iniciales, y vincular
- * `JobCandidate.businessEntityId`— es HU-30; este esquema solo valida el
- * formulario.
+ * Son los campos que `JobCandidate` sigue sin tener aunque ya tenga nombre y
+ * apellido propios: documento, cargo, fechas, departamento, turno y salario
+ * no existen en su registro hasta que se completan acá. La ejecución de la
+ * contratación —crear `Person`/`Employee` (con el nombre que ya trae el
+ * candidato), la asignación y el salario iniciales, y vincular
+ * `JobCandidate.businessEntityId`— la hace `services/hire.service.ts`; este
+ * esquema solo valida el formulario.
  */
 export const hireCandidateSchema = z
   .object({

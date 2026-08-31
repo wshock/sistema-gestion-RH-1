@@ -1,11 +1,13 @@
 /**
  * Tipos del módulo de candidatos.
  *
- * `JobCandidate` no tiene nombre propio: el de un candidato contratado sale
- * de `Person` a través del empleado que se le asoció; el de uno pendiente,
- * cuando se puede, se extrae de su currículum (ver `resume.ts`). Por eso
- * `name` es `string | null` en los dos tipos: no siempre hay de dónde
- * sacarlo.
+ * `firstName`/`lastName` son campos propios de `JobCandidate` (ver
+ * `migration/add_jobcandidate_name_columns.sql`): antes se intentaban extraer
+ * del currículum con expresiones regulares, pero un currículum es texto
+ * libre y no siempre trae de dónde sacarlos. `name` sigue existiendo como
+ * texto de presentación ya armado ("Apellido, Nombre"), resuelto en la capa
+ * de datos a partir de esos campos —o de `Person`, si el candidato ya fue
+ * contratado—.
  */
 
 /**
@@ -18,6 +20,7 @@ export type CandidateStatus = "pendiente" | "contratado";
 export type CandidateListItem = {
   jobCandidateId: number;
   status: CandidateStatus;
+  /** "Apellido, Nombre", ya armado. `null` solo para un candidato migrado antes de que el nombre fuera un campo propio y sin nombre resoluble en su currículum. */
   name: string | null;
 };
 
@@ -25,7 +28,10 @@ export type CandidateDetail = {
   jobCandidateId: number;
   status: CandidateStatus;
   name: string | null;
+  /** `null` en los mismos casos que `name`; ambos van juntos. */
+  firstName: string | null;
+  lastName: string | null;
   modifiedDate: Date;
-  /** Texto migrado del XML original. `null` si el candidato no tiene currículum registrado. */
+  /** Texto del currículum. `null` si el candidato no tiene uno registrado. */
   resume: string | null;
 };

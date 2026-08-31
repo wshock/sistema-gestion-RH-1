@@ -1,6 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/data/prisma";
-import { extraerNombreDeCurriculum } from "@/features/candidatos/resume";
 import type { CandidateQuery } from "@/features/candidatos/schemas";
 import type {
   CandidateDetail,
@@ -12,10 +11,12 @@ import type {
  * Acceso a `humanresources.jobcandidate`.
  *
  * `businessEntityId` es la única fuente del estado: no nulo significa que el
- * candidato tiene un empleado asociado, es decir, que fue contratado. El
- * `LEFT JOIN` a `person` solo aporta el nombre cuando eso pasó; para el resto
- * se recurre al currículum (`resume.ts`), porque `JobCandidate` no tiene
- * nombre propio.
+ * candidato tiene un empleado asociado, es decir, que fue contratado.
+ * `firstName`/`lastName` son campos propios de `jobcandidate` (ver
+ * `migration/add_jobcandidate_name_columns.sql`); el `LEFT JOIN` a `person`
+ * los reemplaza por los de la persona real una vez contratado, que son los
+ * autoritativos a partir de ahí —pueden divergir si la ficha del empleado se
+ * edita después—.
  */
 
 type CandidateFilter = Omit<CandidateQuery, "page">;
@@ -33,13 +34,11 @@ function estadoDe(businessEntityId: number | null): CandidateStatus {
 }
 
 function nombreDe(fila: CandidateRow): string | null {
-  // El nombre de la persona contratada es el dato autoritativo; el del
-  // currículum es lo mejor disponible mientras el candidato sigue pendiente.
-  if (fila.firstName && fila.lastName) {
-    return `${fila.lastName}, ${fila.firstName}`;
+  if (!fila.firstName || !fila.lastName) {
+    return null;
   }
 
-  return extraerNombreDeCurriculum(fila.resume);
+  return `${fila.lastName}, ${fila.firstName}`;
 }
 
 function condicionDeEstado(estado: CandidateFilter["estado"]): Prisma.Sql {
@@ -54,6 +53,13 @@ function condicionDeEstado(estado: CandidateFilter["estado"]): Prisma.Sql {
   return Prisma.sql`TRUE`;
 }
 
+// `coalesce` prioriza el nombre de `Person` cuando existe (candidato
+// contratado); si no, el propio de `jobcandidate`.
+const NOMBRE_SQL = Prisma.sql`
+  coalesce(p.firstname, jc.firstname) AS "firstName",
+  coalesce(p.lastname, jc.lastname)   AS "lastName"
+`;
+
 export async function listCandidates({
   estado,
   skip,
@@ -65,8 +71,7 @@ export async function listCandidates({
     SELECT jc.jobcandidateid   AS "jobCandidateId",
            jc.businessentityid AS "businessEntityId",
            jc.resume           AS "resume",
-           p.firstname         AS "firstName",
-           p.lastname          AS "lastName"
+           ${NOMBRE_SQL}
     FROM humanresources.jobcandidate jc
     LEFT JOIN person.person p ON p.businessentityid = jc.businessentityid
     WHERE ${condicion}
@@ -103,8 +108,7 @@ export async function findCandidateById(
            jc.businessentityid AS "businessEntityId",
            jc.resume           AS "resume",
            jc.modifieddate     AS "modifiedDate",
-           p.firstname         AS "firstName",
-           p.lastname          AS "lastName"
+           ${NOMBRE_SQL}
     FROM humanresources.jobcandidate jc
     LEFT JOIN person.person p ON p.businessentityid = jc.businessentityid
     WHERE jc.jobcandidateid = ${jobCandidateId}
@@ -121,6 +125,8 @@ export async function findCandidateById(
     jobCandidateId: fila.jobCandidateId,
     status: estadoDe(fila.businessEntityId),
     name: nombreDe(fila),
+    firstName: fila.firstName,
+    lastName: fila.lastName,
     modifiedDate: fila.modifiedDate,
     resume: fila.resume,
   };

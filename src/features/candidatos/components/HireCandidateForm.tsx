@@ -42,10 +42,9 @@ const VALORES_INICIALES = {
  * Formulario de condiciones de contratación.
  *
  * Valida en el cliente con el mismo esquema que la Server Action; la del
- * servidor es la que decide, porque esta se puede saltar. La ejecución real
- * —crear persona, empleado, asignación y salario— es HU-30: acá el envío ya
- * llama a la Server Action definitiva, que hoy responde que el proceso
- * todavía no está habilitado.
+ * servidor es la que decide, porque esta se puede saltar. Al confirmar,
+ * redirige a la ficha del empleado recién creado, no a la del candidato: es
+ * ahí donde queda el registro de ahora en más.
  */
 export function HireCandidateForm({
   jobCandidateId,
@@ -71,7 +70,7 @@ export function HireCandidateForm({
 
     if (resultado.success) {
       toast.success("Empleado contratado.");
-      router.push(`/candidatos/${jobCandidateId}`);
+      router.push(`/empleados/${resultado.data.businessEntityId}`);
 
       return;
     }
