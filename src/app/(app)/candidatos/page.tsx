@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BriefcaseIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { ArrowUpRightIcon, BriefcaseIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { CandidateFormDialog } from "@/features/candidatos/components/CandidateFormDialog";
 import { CandidateStatusFilter } from "@/features/candidatos/components/CandidateStatusFilter";
@@ -71,9 +71,16 @@ export default async function CandidatosPage({
             Ver currículum
           </Link>
 
-          {/* Un candidato contratado no inicia el proceso de nuevo, ni se
-              edita ni se elimina: rompería la trazabilidad de su
-              contratación. */}
+          {candidato.businessEntityId !== null && (
+            <Link
+              href={`/empleados/${candidato.businessEntityId}`}
+              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm whitespace-nowrap"
+            >
+              Ver empleado
+              <ArrowUpRightIcon className="size-3.5" />
+            </Link>
+          )}
+
           {candidato.status === "pendiente" && (
             <>
               <Button

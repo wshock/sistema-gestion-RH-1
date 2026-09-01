@@ -22,6 +22,8 @@ export type CandidateListItem = {
   status: CandidateStatus;
   /** "Apellido, Nombre", ya armado. `null` solo para un candidato migrado antes de que el nombre fuera un campo propio y sin nombre resoluble en su currículum. */
   name: string | null;
+  /** Id del empleado resultante. `null` mientras el candidato sigue pendiente. */
+  businessEntityId: number | null;
 };
 
 export type CandidateDetail = {
@@ -31,6 +33,8 @@ export type CandidateDetail = {
   /** `null` en los mismos casos que `name`; ambos van juntos. */
   firstName: string | null;
   lastName: string | null;
+  /** Id del empleado resultante. `null` mientras el candidato sigue pendiente. */
+  businessEntityId: number | null;
   modifiedDate: Date;
   /** Texto del currículum. `null` si el candidato no tiene uno registrado. */
   resume: string | null;
