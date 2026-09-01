@@ -20,6 +20,23 @@ export type HireResult = { businessEntityId: number };
 /** El nombre y apellido propios del candidato (`JobCandidate.firstName`/`.lastName`). */
 export type NombreDeCandidato = { firstName: string; lastName: string };
 
+/**
+ * Señal de que el candidato se contrató entre que el servicio lo comprobó y
+ * que la transacción llegó a vincularlo —dos pestañas, o dos personas del
+ * equipo, confirmando la misma contratación a la vez—. El resto de las
+ * comprobaciones (documento, departamento, turno) se hacen antes de abrir la
+ * transacción, que es lo que el criterio de HU-31 permite; esta es la única
+ * que vale la pena repetir de forma atómica: es la misma fila que la
+ * transacción ya va a escribir al final, así que la relectura no cuesta una
+ * consulta extra.
+ */
+export class CandidatoYaContratadoError extends Error {
+  constructor() {
+    super("El candidato se contrató en otra operación mientras esta estaba en curso.");
+    this.name = "CandidatoYaContratadoError";
+  }
+}
+
 function fechaDeCalendario(iso: string): Date {
   const [anio, mes, dia] = iso.split("-").map(Number);
 
@@ -114,11 +131,21 @@ export function hireCandidate(
     });
 
     // Último paso: el vínculo solo tiene sentido una vez que el empleado
-    // existe de verdad.
-    await tx.jobCandidate.update({
-      where: { jobCandidateId },
+    // existe de verdad. La condición `businessEntityId: null` en el `where`
+    // es la comprobación atómica: si otra operación ya vinculó a este
+    // candidato entre que el servicio lo comprobó y que la transacción llegó
+    // hasta acá, `updateMany` no toca ninguna fila en lugar de pisar el
+    // vínculo existente, y se aborta toda la transacción —persona, empleado
+    // e historiales incluidos— en vez de dejar un empleado huérfano de
+    // candidato.
+    const vinculado = await tx.jobCandidate.updateMany({
+      where: { jobCandidateId, businessEntityId: null },
       data: { businessEntityId, modifiedDate: ahora },
     });
+
+    if (vinculado.count === 0) {
+      throw new CandidatoYaContratadoError();
+    }
 
     return { businessEntityId };
   });
