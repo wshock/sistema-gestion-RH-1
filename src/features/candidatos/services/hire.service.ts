@@ -1,7 +1,10 @@
 import { prisma } from "@/data/prisma";
 import * as candidateData from "@/features/candidatos/data/read";
 import * as hireData from "@/features/candidatos/data/hire";
-import type { HireResult } from "@/features/candidatos/data/hire";
+import {
+  CandidatoYaContratadoError,
+  type HireResult,
+} from "@/features/candidatos/data/hire";
 import type { HireCandidateInput } from "@/features/candidatos/schemas";
 import type { CandidateDetail } from "@/features/candidatos/types";
 import { fail, ok, unexpected, type Result } from "@/lib/result";
@@ -114,6 +117,16 @@ export async function hireCandidate(
       await hireData.hireCandidate(jobCandidateId, { firstName, lastName }, input),
     );
   } catch (error) {
+    // La comprobación de elegibilidad y la escritura no son atómicas entre
+    // sí; esta es la traducción de la única condición que sí se revalida
+    // dentro de la transacción (ver `data/hire.ts`).
+    if (error instanceof CandidatoYaContratadoError) {
+      return fail(
+        "CONFLICTO",
+        "Este candidato ya fue contratado: no se puede iniciar el proceso de nuevo.",
+      );
+    }
+
     return unexpected("hireCandidate", error);
   }
 }
