@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "seed": "tsx prisma/seed.ts",
+    "verify:hire": "tsx scripts/verify-hire-transaction.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
