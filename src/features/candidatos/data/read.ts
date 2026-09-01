@@ -83,6 +83,7 @@ export async function listCandidates({
     jobCandidateId: fila.jobCandidateId,
     status: estadoDe(fila.businessEntityId),
     name: nombreDe(fila),
+    businessEntityId: fila.businessEntityId,
   }));
 }
 
@@ -127,6 +128,7 @@ export async function findCandidateById(
     name: nombreDe(fila),
     firstName: fila.firstName,
     lastName: fila.lastName,
+    businessEntityId: fila.businessEntityId,
     modifiedDate: fila.modifiedDate,
     resume: fila.resume,
   };

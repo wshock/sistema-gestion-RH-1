@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowUpRightIcon } from "lucide-react";
 
 import { CandidateDetailActions } from "@/features/candidatos/components/CandidateDetailActions";
 import { CandidateResume } from "@/features/candidatos/components/CandidateResume";
@@ -63,6 +63,16 @@ export default async function CandidatoPage({
           <p className="text-muted-foreground text-sm">
             Candidato #{candidato.jobCandidateId}
           </p>
+
+          {candidato.businessEntityId !== null && (
+            <Link
+              href={`/empleados/${candidato.businessEntityId}`}
+              className="text-primary mt-1 inline-flex items-center gap-1 text-sm hover:underline"
+            >
+              Ver ficha del empleado
+              <ArrowUpRightIcon className="size-3.5" />
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
