@@ -250,3 +250,42 @@ export async function insertPayHistory(input: {
     payFrequency: fila.payFrequency === 2 ? 2 : 1,
   };
 }
+
+/**
+ * Cierra las asignaciones abiertas y abre la nueva, en una sola transacción:
+ * el empleado no puede quedar con dos vigentes ni sin ninguna.
+ *
+ * La fecha de fin de las cerradas es el día anterior al traslado, para que
+ * los periodos no se solapen. Las filas históricas no se borran.
+ */
+export function transferAssignment(input: {
+  businessEntityId: number;
+  departmentId: number;
+  shiftId: number;
+  startDate: string;
+}): Promise<EmployeeWriteRow> {
+  const inicio = fechaDeCalendario(input.startDate);
+  const [anio, mes, dia] = input.startDate.split("-").map(Number);
+  const finAnterior = new Date(Date.UTC(anio, mes - 1, dia - 1));
+  const ahora = new Date();
+
+  return prisma.$transaction(async (tx) => {
+    await tx.employeeDepartmentHistory.updateMany({
+      where: { businessEntityId: input.businessEntityId, endDate: null },
+      data: { endDate: finAnterior, modifiedDate: ahora },
+    });
+
+    await tx.employeeDepartmentHistory.create({
+      data: {
+        businessEntityId: input.businessEntityId,
+        departmentId: input.departmentId,
+        shiftId: input.shiftId,
+        startDate: inicio,
+        endDate: null,
+        modifiedDate: ahora,
+      },
+    });
+
+    return { businessEntityId: input.businessEntityId };
+  });
+}

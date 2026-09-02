@@ -8,11 +8,16 @@ import type {
   EmployeeCreateInput,
   EmployeeEditInput,
   SalaryChangeInput,
+  TransferInput,
 } from "@/features/empleados/schemas";
-import { crearSalaryChangeSchema } from "@/features/empleados/schemas";
+import {
+  crearSalaryChangeSchema,
+  crearTransferSchema,
+  MENSAJE_SIN_ASIGNACION_VIGENTE,
+} from "@/features/empleados/schemas";
 import type { EmployeeWriteRow } from "@/features/empleados/data/write";
 import type { EmployeePayRecord } from "@/features/empleados/types";
-import { currentPay } from "@/features/empleados/vigencia";
+import { currentAssignment, currentPay } from "@/features/empleados/vigencia";
 
 /**
  * Reglas de negocio de la escritura de empleados.
@@ -194,5 +199,70 @@ export async function registerSalaryChange(
     }
 
     return unexpected("registerSalaryChange", error);
+  }
+}
+
+/**
+ * Traslado: cierra la vigente y abre otra en la misma transacción. Las
+ * reglas de HU-37 corren con el mismo esquema que el formulario, más la
+ * existencia de catálogo, que solo se puede comprobar acá.
+ */
+export async function transferEmployee(
+  input: TransferInput,
+): Promise<Result<EmployeeWriteRow>> {
+  try {
+    const empleado = await employeeRead.findEmployeeById(input.businessEntityId);
+
+    if (!empleado) {
+      return fail("NO_ENCONTRADO", "El empleado solicitado no existe.");
+    }
+
+    const historial = await employeeRead.listAssignmentHistory(input.businessEntityId);
+    const vigente = currentAssignment(historial);
+
+    if (!vigente) {
+      return fail("CONFLICTO", MENSAJE_SIN_ASIGNACION_VIGENTE);
+    }
+
+    const parsed = crearTransferSchema({
+      hireDate: empleado.hireDate,
+      currentStartDate: vigente.startDate,
+      currentDepartmentId: vigente.departmentId,
+      currentShiftId: vigente.shiftId,
+    }).safeParse(input);
+
+    if (!parsed.success) {
+      return fail(
+        "VALIDACION",
+        "Revisá los datos del formulario.",
+        erroresPorCampo(parsed.error),
+      );
+    }
+
+    if (!(await employeeData.departmentExists(parsed.data.departmentId))) {
+      return fail("NO_ENCONTRADO", "El departamento seleccionado ya no existe.", {
+        departmentId: ["Ese departamento ya no está disponible."],
+      });
+    }
+
+    if (!(await employeeData.shiftExists(parsed.data.shiftId))) {
+      return fail("NO_ENCONTRADO", "El turno seleccionado ya no existe.", {
+        shiftId: ["Ese turno ya no está disponible."],
+      });
+    }
+
+    return ok(await employeeData.transferAssignment(parsed.data));
+  } catch (error) {
+    if (esClaveDuplicada(error)) {
+      return fail(
+        "DUPLICADO",
+        "Ya existe una asignación con ese departamento, turno y fecha de inicio.",
+        {
+          startDate: ["Ya hay una asignación registrada con ese destino en esa fecha."],
+        },
+      );
+    }
+
+    return unexpected("transferEmployee", error);
   }
 }
