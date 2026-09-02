@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+  fechaATiempo,
   fechaSchema,
   idSchema,
   LARGO_CARGO,
@@ -81,6 +82,18 @@ const camposDeEmpleado = {
   sickLeaveHours: horasSchema("Las horas de incapacidad"),
 };
 
+/** Tarifa por hora. `numeric` sin escala en la base; se acota para evitar importes absurdos. */
+const rateSchema = z.coerce
+  .number({ error: "El salario es obligatorio." })
+  .positive({ error: "El salario debe ser mayor que cero." })
+  .max(1_000_000, { error: "El salario supera el máximo admitido." });
+
+const payFrequencySchema = z.coerce
+  .number({ error: "Seleccioná la frecuencia de pago." })
+  .refine((valor): valor is 1 | 2 => valor === 1 || valor === 2, {
+    error: "La frecuencia de pago debe ser mensual o quincenal.",
+  });
+
 /**
  * Edición de un empleado existente.
  *
@@ -105,16 +118,8 @@ export const employeeCreateSchema = z
     ...camposDeEmpleado,
     departmentId: idSchema("el departamento"),
     shiftId: idSchema("el turno"),
-    rate: z.coerce
-      .number({ error: "El salario es obligatorio." })
-      .positive({ error: "El salario debe ser mayor que cero." })
-      // `numeric` sin escala en la base; se acota para evitar importes absurdos.
-      .max(1_000_000, { error: "El salario supera el máximo admitido." }),
-    payFrequency: z.coerce
-      .number({ error: "Seleccioná la frecuencia de pago." })
-      .refine((valor): valor is 1 | 2 => valor === 1 || valor === 2, {
-        error: "La frecuencia de pago debe ser mensual o quincenal.",
-      }),
+    rate: rateSchema,
+    payFrequency: payFrequencySchema,
   })
   .superRefine(validarFechas);
 
@@ -124,6 +129,76 @@ export const employeeIdSchema = z.coerce
   .number({ error: "Identificador inválido." })
   .int({ error: "Identificador inválido." })
   .positive({ error: "Identificador inválido." });
+
+export type ContextoCambioSalarial = {
+  hireDate: string;
+  lastPayDate: string | null;
+};
+
+export const MENSAJE_FECHA_CAMBIO_FUTURA = "La fecha de cambio no puede ser futura.";
+export const MENSAJE_FECHA_ANTES_CONTRATACION =
+  "La fecha de cambio no puede ser anterior a la contratación.";
+export const MENSAJE_FECHA_NO_POSTERIOR_AL_ULTIMO =
+  "La fecha de cambio debe ser posterior a la del último salario registrado.";
+
+/**
+ * Coherencia cronológica del historial salarial (HU-35).
+ *
+ * Vive en el esquema para que cliente y servidor usen las mismas reglas y
+ * los mismos textos. `lastPayDate` en `null` es el caso de un empleado sin
+ * historial: el primer registro no tiene un precedente que respetar.
+ */
+export function validarFechaCambioSalarial(
+  rateChangeDate: string,
+  contexto: ContextoCambioSalarial,
+  ctx: z.RefinementCtx,
+) {
+  if (fechaATiempo(rateChangeDate) > Date.now()) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["rateChangeDate"],
+      message: MENSAJE_FECHA_CAMBIO_FUTURA,
+    });
+  }
+
+  if (rateChangeDate < contexto.hireDate) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["rateChangeDate"],
+      message: MENSAJE_FECHA_ANTES_CONTRATACION,
+    });
+  }
+
+  if (contexto.lastPayDate && rateChangeDate <= contexto.lastPayDate) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["rateChangeDate"],
+      message: MENSAJE_FECHA_NO_POSTERIOR_AL_ULTIMO,
+    });
+  }
+}
+
+const camposDeCambioSalarial = {
+  businessEntityId: employeeIdSchema,
+  rate: rateSchema,
+  payFrequency: payFrequencySchema,
+  rateChangeDate: fechaSchema("cambio"),
+};
+
+/** Campos del cambio, sin contexto del empleado. Sirve para parsear el payload. */
+export const salaryChangeFieldsSchema = z.object(camposDeCambioSalarial);
+
+export type SalaryChangeInput = z.infer<typeof salaryChangeFieldsSchema>;
+
+/**
+ * Esquema completo: tarifa positiva, frecuencia y fechas coherentes con la
+ * contratación y el último salario. Cliente y Server Action lo comparten.
+ */
+export function crearSalaryChangeSchema(contexto: ContextoCambioSalarial) {
+  return salaryChangeFieldsSchema.superRefine((datos, ctx) =>
+    validarFechaCambioSalarial(datos.rateChangeDate, contexto, ctx),
+  );
+}
 
 /** 290 empleados: con 10 por página serían 29 saltos para llegar al final. */
 export const TAMANO_PAGINA = 20;

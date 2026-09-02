@@ -217,3 +217,36 @@ export function setEmployeeStatus(
     select: { businessEntityId: true },
   });
 }
+
+/**
+ * Inserta un cambio salarial. No actualiza ni borra filas anteriores: el
+ * vigente lo decide `currentPay` por la fecha más reciente.
+ */
+export async function insertPayHistory(input: {
+  businessEntityId: number;
+  rate: number;
+  payFrequency: 1 | 2;
+  rateChangeDate: string;
+}): Promise<{ rateChangeDate: Date; rate: number; payFrequency: 1 | 2 }> {
+  const ahora = new Date();
+  const fila = await prisma.employeePayHistory.create({
+    data: {
+      businessEntityId: input.businessEntityId,
+      rateChangeDate: fechaDeCalendario(input.rateChangeDate),
+      rate: input.rate,
+      payFrequency: input.payFrequency,
+      modifiedDate: ahora,
+    },
+    select: {
+      rateChangeDate: true,
+      rate: true,
+      payFrequency: true,
+    },
+  });
+
+  return {
+    rateChangeDate: fila.rateChangeDate,
+    rate: Number(fila.rate),
+    payFrequency: fila.payFrequency === 2 ? 2 : 1,
+  };
+}

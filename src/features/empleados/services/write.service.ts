@@ -1,10 +1,18 @@
+import { z } from "zod";
+
+import * as employeeRead from "@/features/empleados/data/read";
 import * as employeeData from "@/features/empleados/data/write";
 import { fail, ok, unexpected, type Result } from "@/lib/result";
+import { toUtcCalendarDate } from "@/features/empleados/format";
 import type {
   EmployeeCreateInput,
   EmployeeEditInput,
+  SalaryChangeInput,
 } from "@/features/empleados/schemas";
+import { crearSalaryChangeSchema } from "@/features/empleados/schemas";
 import type { EmployeeWriteRow } from "@/features/empleados/data/write";
+import type { EmployeePayRecord } from "@/features/empleados/types";
+import { currentPay } from "@/features/empleados/vigencia";
 
 /**
  * Reglas de negocio de la escritura de empleados.
@@ -124,5 +132,67 @@ export async function setEmployeeStatus(
     return ok(await employeeData.setEmployeeStatus(businessEntityId, currentFlag));
   } catch (error) {
     return unexpected("setEmployeeStatus", error);
+  }
+}
+
+function erroresPorCampo<T>(error: z.ZodError<T>): Record<string, string[]> {
+  const fieldErrors: Record<string, string[] | undefined> =
+    z.flattenError(error).fieldErrors;
+
+  return Object.fromEntries(
+    Object.entries(fieldErrors).filter((entrada): entrada is [string, string[]] =>
+      Boolean(entrada[1]?.length),
+    ),
+  );
+}
+
+function esClaveDuplicada(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2002"
+  );
+}
+
+/**
+ * Registra un salario nuevo. Solo inserta: el historial anterior queda
+ * intacto. Las reglas cronológicas (HU-35) se aplican con el mismo esquema
+ * que el formulario, usando contratación e historial leídos de la base.
+ */
+export async function registerSalaryChange(
+  input: SalaryChangeInput,
+): Promise<Result<EmployeePayRecord>> {
+  try {
+    const empleado = await employeeRead.findEmployeeById(input.businessEntityId);
+
+    if (!empleado) {
+      return fail("NO_ENCONTRADO", "El empleado solicitado no existe.");
+    }
+
+    const historial = await employeeRead.listPayHistory(input.businessEntityId);
+    const vigente = currentPay(historial);
+    const parsed = crearSalaryChangeSchema({
+      hireDate: empleado.hireDate,
+      lastPayDate: vigente ? toUtcCalendarDate(vigente.rateChangeDate) : null,
+    }).safeParse(input);
+
+    if (!parsed.success) {
+      return fail(
+        "VALIDACION",
+        "Revisá los datos del formulario.",
+        erroresPorCampo(parsed.error),
+      );
+    }
+
+    return ok(await employeeData.insertPayHistory(parsed.data));
+  } catch (error) {
+    if (esClaveDuplicada(error)) {
+      return fail("DUPLICADO", "Ya existe un cambio salarial en esa fecha.", {
+        rateChangeDate: ["Ya hay un cambio salarial registrado en esa fecha."],
+      });
+    }
+
+    return unexpected("registerSalaryChange", error);
   }
 }

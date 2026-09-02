@@ -10,8 +10,10 @@ import {
   employeeCreateSchema,
   employeeEditSchema,
   employeeIdSchema,
+  salaryChangeFieldsSchema,
 } from "@/features/empleados/schemas";
 import * as employeeService from "@/features/empleados/services/write.service";
+import type { EmployeePayRecord } from "@/features/empleados/types";
 
 /**
  * Server Actions de escritura de empleados.
@@ -112,6 +114,29 @@ export async function setEmployeeStatusAction(
   if (resultado.success) {
     revalidatePath(RUTA);
     revalidatePath(`${RUTA}/${parsedId.data}`);
+  }
+
+  return resultado;
+}
+
+export async function registerSalaryChangeAction(
+  input: unknown,
+): Promise<Result<EmployeePayRecord>> {
+  if (!(await getSessionUser())) {
+    return fail("NO_AUTORIZADO", SIN_SESION);
+  }
+
+  const parsed = salaryChangeFieldsSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return fail("VALIDACION", DATOS_INVALIDOS, erroresPorCampo(parsed.error));
+  }
+
+  const resultado = await employeeService.registerSalaryChange(parsed.data);
+
+  if (resultado.success) {
+    revalidatePath(RUTA);
+    revalidatePath(`${RUTA}/${parsed.data.businessEntityId}`);
   }
 
   return resultado;
