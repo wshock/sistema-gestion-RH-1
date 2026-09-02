@@ -200,6 +200,88 @@ export function crearSalaryChangeSchema(contexto: ContextoCambioSalarial) {
   );
 }
 
+export type ContextoTraslado = {
+  hireDate: string;
+  currentStartDate: string;
+  currentDepartmentId: number;
+  currentShiftId: number;
+};
+
+export const MENSAJE_FECHA_TRASLADO_FUTURA = "La fecha de traslado no puede ser futura.";
+export const MENSAJE_FECHA_TRASLADO_ANTES_CONTRATACION =
+  "La fecha de traslado no puede ser anterior a la contratación.";
+export const MENSAJE_FECHA_TRASLADO_NO_POSTERIOR_AL_INICIO =
+  "La fecha de traslado debe ser posterior al inicio de la asignación vigente.";
+export const MENSAJE_DESTINO_IGUAL_AL_VIGENTE =
+  "El destino coincide con la asignación vigente. Cambiá el departamento o el turno.";
+export const MENSAJE_SIN_ASIGNACION_VIGENTE =
+  "Este empleado no tiene una asignación vigente. No se puede registrar un traslado.";
+
+/**
+ * Coherencia del historial de asignaciones (HU-37).
+ *
+ * Cliente y servidor comparten reglas y textos. Departamento y turno de
+ * destino se comprueban contra catálogo en el servicio: el esquema no habla
+ * con la base.
+ */
+export function validarTraslado(
+  datos: { startDate: string; departmentId: number; shiftId: number },
+  contexto: ContextoTraslado,
+  ctx: z.RefinementCtx,
+) {
+  if (fechaATiempo(datos.startDate) > Date.now()) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["startDate"],
+      message: MENSAJE_FECHA_TRASLADO_FUTURA,
+    });
+  }
+
+  if (datos.startDate < contexto.hireDate) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["startDate"],
+      message: MENSAJE_FECHA_TRASLADO_ANTES_CONTRATACION,
+    });
+  }
+
+  if (datos.startDate <= contexto.currentStartDate) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["startDate"],
+      message: MENSAJE_FECHA_TRASLADO_NO_POSTERIOR_AL_INICIO,
+    });
+  }
+
+  if (
+    datos.departmentId === contexto.currentDepartmentId &&
+    datos.shiftId === contexto.currentShiftId
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["departmentId"],
+      message: MENSAJE_DESTINO_IGUAL_AL_VIGENTE,
+    });
+  }
+}
+
+const camposDeTraslado = {
+  businessEntityId: employeeIdSchema,
+  departmentId: idSchema("el departamento"),
+  shiftId: idSchema("el turno"),
+  startDate: fechaSchema("traslado"),
+};
+
+export const transferFieldsSchema = z.object(camposDeTraslado);
+
+export type TransferInput = z.infer<typeof transferFieldsSchema>;
+
+export function crearTransferSchema(contexto: ContextoTraslado) {
+  return transferFieldsSchema.superRefine((datos, ctx) =>
+    validarTraslado(datos, contexto, ctx),
+  );
+}
+
 /** 290 empleados: con 10 por página serían 29 saltos para llegar al final. */
 export const TAMANO_PAGINA = 20;
 

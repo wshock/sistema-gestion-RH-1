@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleDollarSignIcon, PencilIcon } from "lucide-react";
+import { ArrowRightLeftIcon, CircleDollarSignIcon, PencilIcon } from "lucide-react";
 
 import { EmployeeStatusAction } from "@/features/empleados/components/EmployeeStatusAction";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import type { EmployeeDetail } from "@/features/empleados/types";
 
 /**
  * Acciones de la ficha de detalle: editar (HU-27), baja/reactivación
- * lógica (HU-28) y cambio salarial (HU-34). Separado de `EmployeeRowActions`
+ * lógica (HU-28), cambio salarial (HU-34) y traslado (HU-36). Separado de `EmployeeRowActions`
  * porque la ficha dispone de todos los datos y de más espacio: acá los
  * botones llevan rótulo, en la fila son solo iconos.
  *
@@ -34,6 +34,15 @@ export function EmployeeDetailActions({ empleado }: { empleado: EmployeeDetail }
       >
         <CircleDollarSignIcon />
         Cambio salarial
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        render={<Link href={`/empleados/${empleado.businessEntityId}/traslado`} />}
+      >
+        <ArrowRightLeftIcon />
+        Traslado
       </Button>
 
       <EmployeeStatusAction

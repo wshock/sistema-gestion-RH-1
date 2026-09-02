@@ -11,6 +11,7 @@ import {
   employeeEditSchema,
   employeeIdSchema,
   salaryChangeFieldsSchema,
+  transferFieldsSchema,
 } from "@/features/empleados/schemas";
 import * as employeeService from "@/features/empleados/services/write.service";
 import type { EmployeePayRecord } from "@/features/empleados/types";
@@ -133,6 +134,29 @@ export async function registerSalaryChangeAction(
   }
 
   const resultado = await employeeService.registerSalaryChange(parsed.data);
+
+  if (resultado.success) {
+    revalidatePath(RUTA);
+    revalidatePath(`${RUTA}/${parsed.data.businessEntityId}`);
+  }
+
+  return resultado;
+}
+
+export async function transferEmployeeAction(
+  input: unknown,
+): Promise<Result<EmployeeWriteRow>> {
+  if (!(await getSessionUser())) {
+    return fail("NO_AUTORIZADO", SIN_SESION);
+  }
+
+  const parsed = transferFieldsSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return fail("VALIDACION", DATOS_INVALIDOS, erroresPorCampo(parsed.error));
+  }
+
+  const resultado = await employeeService.transferEmployee(parsed.data);
 
   if (resultado.success) {
     revalidatePath(RUTA);
