@@ -87,6 +87,18 @@ const idSchema = (campo: string) =>
     .int({ error: `Seleccioná ${campo}.` })
     .positive({ error: `Seleccioná ${campo}.` });
 
+/** Tarifa por hora. `numeric` sin escala en la base; se acota para evitar importes absurdos. */
+const rateSchema = z.coerce
+  .number({ error: "El salario es obligatorio." })
+  .positive({ error: "El salario debe ser mayor que cero." })
+  .max(1_000_000, { error: "El salario supera el máximo admitido." });
+
+const payFrequencySchema = z.coerce
+  .number({ error: "Seleccioná la frecuencia de pago." })
+  .refine((valor): valor is 1 | 2 => valor === 1 || valor === 2, {
+    error: "La frecuencia de pago debe ser mensual o quincenal.",
+  });
+
 /**
  * Campos que comparten el alta y la edición.
  *
@@ -189,16 +201,8 @@ export const employeeCreateSchema = z
     ...camposDeEmpleado,
     departmentId: idSchema("el departamento"),
     shiftId: idSchema("el turno"),
-    rate: z.coerce
-      .number({ error: "El salario es obligatorio." })
-      .positive({ error: "El salario debe ser mayor que cero." })
-      // `numeric` sin escala en la base; se acota para evitar importes absurdos.
-      .max(1_000_000, { error: "El salario supera el máximo admitido." }),
-    payFrequency: z.coerce
-      .number({ error: "Seleccioná la frecuencia de pago." })
-      .refine((valor): valor is 1 | 2 => valor === 1 || valor === 2, {
-        error: "La frecuencia de pago debe ser mensual o quincenal.",
-      }),
+    rate: rateSchema,
+    payFrequency: payFrequencySchema,
   })
   .superRefine(validarFechas);
 
@@ -208,6 +212,30 @@ export const employeeIdSchema = z.coerce
   .number({ error: "Identificador inválido." })
   .int({ error: "Identificador inválido." })
   .positive({ error: "Identificador inválido." });
+
+/**
+ * Cambio salarial: tarifa, frecuencia y fecha. No toca registros anteriores;
+ * el servicio inserta una fila nueva. La fecha no puede ser futura; que sea
+ * posterior al vigente lo resuelve el servicio con `currentPay`.
+ */
+export const salaryChangeSchema = z
+  .object({
+    businessEntityId: employeeIdSchema,
+    rate: rateSchema,
+    payFrequency: payFrequencySchema,
+    rateChangeDate: fechaSchema("cambio"),
+  })
+  .superRefine((datos, ctx) => {
+    if (aTiempo(datos.rateChangeDate) > Date.now()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["rateChangeDate"],
+        message: "La fecha de cambio no puede ser futura.",
+      });
+    }
+  });
+
+export type SalaryChangeInput = z.infer<typeof salaryChangeSchema>;
 
 /** 290 empleados: con 10 por página serían 29 saltos para llegar al final. */
 export const TAMANO_PAGINA = 20;

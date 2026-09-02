@@ -1,19 +1,21 @@
+import Link from "next/link";
+import { CircleDollarSignIcon } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import type { EmployeeDetail } from "@/features/empleados/types";
 
 /**
- * Punto de montaje: acciones de la ficha de detalle (editar y baja lógica).
- *
- * ⚠️ Marcador de posición. Lo implementa la feature de escritura (HU-23);
- * hasta entonces devuelve `null` y la ficha se ve en modo solo lectura.
- *
- * Va separado de `EmployeeRowActions` porque la ficha dispone de todos los
- * datos y de más espacio: acá los botones llevan rótulo, en la fila son solo
- * iconos.
- *
- * Ver `docs/acuerdo-empleados.md`.
+ * Acciones de la ficha. El cambio salarial vive en pantalla propia; edición
+ * y baja (HU-23) se montan acá cuando existan.
  */
 export function EmployeeDetailActions({ empleado }: { empleado: EmployeeDetail }) {
-  void empleado;
-
-  return null;
+  return (
+    <Button
+      variant="outline"
+      render={<Link href={`/empleados/${empleado.businessEntityId}/salario`} />}
+    >
+      <CircleDollarSignIcon />
+      Cambio salarial
+    </Button>
+  );
 }

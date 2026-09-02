@@ -6,8 +6,9 @@ import { z } from "zod";
 import type { EmployeeWriteRow } from "@/features/empleados/data/write";
 import { fail, type Result } from "@/lib/result";
 import { getSessionUser } from "@/lib/session";
-import { employeeCreateSchema } from "@/features/empleados/schemas";
+import { employeeCreateSchema, salaryChangeSchema } from "@/features/empleados/schemas";
 import * as employeeService from "@/features/empleados/services/write.service";
+import type { EmployeePayRecord } from "@/features/empleados/types";
 
 /**
  * Server Actions de escritura de empleados.
@@ -49,6 +50,29 @@ export async function createEmployeeAction(
   if (resultado.success) {
     revalidatePath(RUTA);
     revalidatePath(`${RUTA}/${resultado.data.businessEntityId}`);
+  }
+
+  return resultado;
+}
+
+export async function registerSalaryChangeAction(
+  input: unknown,
+): Promise<Result<EmployeePayRecord>> {
+  if (!(await getSessionUser())) {
+    return fail("NO_AUTORIZADO", SIN_SESION);
+  }
+
+  const parsed = salaryChangeSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return fail("VALIDACION", DATOS_INVALIDOS, erroresPorCampo(parsed.error));
+  }
+
+  const resultado = await employeeService.registerSalaryChange(parsed.data);
+
+  if (resultado.success) {
+    revalidatePath(RUTA);
+    revalidatePath(`${RUTA}/${parsed.data.businessEntityId}`);
   }
 
   return resultado;
