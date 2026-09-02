@@ -37,6 +37,15 @@ export function formatInstantDate(fecha: Date): string {
   return formatoFecha.format(fecha);
 }
 
+/** Instante → `"AAAA-MM-DD"` en UTC, comparable con las fechas de formulario. */
+export function toUtcCalendarDate(fecha: Date): string {
+  const anio = fecha.getUTCFullYear();
+  const mes = String(fecha.getUTCMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getUTCDate()).padStart(2, "0");
+
+  return `${anio}-${mes}-${dia}`;
+}
+
 export function formatPayRate(rate: number): string {
   return formatoSalario.format(rate);
 }

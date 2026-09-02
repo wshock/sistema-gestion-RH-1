@@ -63,7 +63,7 @@ export const idSchema = (campo: string) =>
     .positive({ error: `Seleccioná ${campo}.` });
 
 /** Fecha `"AAAA-MM-DD"` a milisegundos UTC, para comparar sin depender del huso. */
-function aTiempo(fecha: string): number {
+export function fechaATiempo(fecha: string): number {
   const [anio, mes, dia] = fecha.split("-").map(Number);
 
   return Date.UTC(anio, mes - 1, dia);
@@ -81,8 +81,8 @@ export function validarFechas(
   ctx: z.RefinementCtx,
 ) {
   const [anio, mes, dia] = datos.birthDate.split("-").map(Number);
-  const nacimiento = aTiempo(datos.birthDate);
-  const contratacion = aTiempo(datos.hireDate);
+  const nacimiento = fechaATiempo(datos.birthDate);
+  const contratacion = fechaATiempo(datos.hireDate);
   const mayoriaDeEdad = Date.UTC(anio + EDAD_MINIMA, mes - 1, dia);
 
   if (contratacion > Date.now()) {
