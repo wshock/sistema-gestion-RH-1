@@ -7,7 +7,9 @@ import type { EmployeeDetail } from "@/features/empleados/types";
 
 /**
  * Acciones de la ficha de detalle: editar (HU-27), baja/reactivación
- * lógica (HU-28), cambio salarial (HU-34) y traslado (HU-36). Separado de `EmployeeRowActions`
+ * lógica (HU-28), cambio salarial (HU-34) y traslado (HU-36). Siguen
+ * visibles con el empleado inactivo (HU-38): la trayectoria se consulta y
+ * se puede seguir registrando. Separado de `EmployeeRowActions`
  * porque la ficha dispone de todos los datos y de más espacio: acá los
  * botones llevan rótulo, en la fila son solo iconos.
  *

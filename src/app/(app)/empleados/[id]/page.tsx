@@ -95,16 +95,22 @@ export default async function EmpleadoPage({
             {empleado.currentFlag ? "Activo" : "Inactivo"}
           </Badge>
 
-          {/* Hueco de HU-27 y HU-28: edición y baja. Hoy el marcador no pinta. */}
           <EmployeeDetailActions empleado={empleado} />
         </div>
       </div>
+
+      {!empleado.currentFlag && (
+        <p className="text-muted-foreground text-sm" role="status">
+          Este empleado está inactivo. Los historiales y la situación vigente siguen
+          visibles y se actualizan si registrás un traslado o un cambio salarial.
+        </p>
+      )}
 
       <EmployeeDetailSections empleado={empleado} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <EmployeeAssignmentHistory history={empleado.assignmentHistory} />
-        <EmployeePayHistory history={empleado.payHistory} />
+        <EmployeePayHistory history={empleado.payHistory} vigente={empleado.currentPay} />
       </div>
     </div>
   );

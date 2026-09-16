@@ -27,6 +27,14 @@ const RUTA = "/empleados";
 const SIN_SESION = "Tu sesión expiró. Iniciá sesión de nuevo para continuar.";
 const DATOS_INVALIDOS = "Revisá los datos del formulario.";
 
+function revalidarFicha(id: number) {
+  revalidatePath(RUTA);
+  revalidatePath(`${RUTA}/${id}`);
+  revalidatePath(`${RUTA}/${id}/salario`);
+  revalidatePath(`${RUTA}/${id}/traslado`);
+  revalidatePath(`${RUTA}/${id}/editar`);
+}
+
 function erroresPorCampo<T>(error: z.ZodError<T>): Record<string, string[]> {
   const fieldErrors: Record<string, string[] | undefined> =
     z.flattenError(error).fieldErrors;
@@ -54,8 +62,7 @@ export async function createEmployeeAction(
   const resultado = await employeeService.createEmployee(parsed.data);
 
   if (resultado.success) {
-    revalidatePath(RUTA);
-    revalidatePath(`${RUTA}/${resultado.data.businessEntityId}`);
+    revalidarFicha(resultado.data.businessEntityId);
   }
 
   return resultado;
@@ -84,8 +91,7 @@ export async function updateEmployeeAction(
   const resultado = await employeeService.updateEmployee(parsedId.data, parsed.data);
 
   if (resultado.success) {
-    revalidatePath(RUTA);
-    revalidatePath(`${RUTA}/${parsedId.data}`);
+    revalidarFicha(parsedId.data);
   }
 
   return resultado;
@@ -113,8 +119,7 @@ export async function setEmployeeStatusAction(
   const resultado = await employeeService.setEmployeeStatus(parsedId.data, currentFlag);
 
   if (resultado.success) {
-    revalidatePath(RUTA);
-    revalidatePath(`${RUTA}/${parsedId.data}`);
+    revalidarFicha(parsedId.data);
   }
 
   return resultado;
@@ -136,8 +141,7 @@ export async function registerSalaryChangeAction(
   const resultado = await employeeService.registerSalaryChange(parsed.data);
 
   if (resultado.success) {
-    revalidatePath(RUTA);
-    revalidatePath(`${RUTA}/${parsed.data.businessEntityId}`);
+    revalidarFicha(parsed.data.businessEntityId);
   }
 
   return resultado;
@@ -159,8 +163,7 @@ export async function transferEmployeeAction(
   const resultado = await employeeService.transferEmployee(parsed.data);
 
   if (resultado.success) {
-    revalidatePath(RUTA);
-    revalidatePath(`${RUTA}/${parsed.data.businessEntityId}`);
+    revalidarFicha(parsed.data.businessEntityId);
   }
 
   return resultado;
