@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -104,6 +105,20 @@ export function EmployeeDetailSections({ empleado }: { empleado: EmployeeDetail 
             <p className="text-muted-foreground mt-1 text-sm">
               Departamento, turno y salario se gestionan con traslado y cambio salarial,
               no con la edición de esta ficha: así queda su historial.
+            </p>
+            <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+              <Link
+                href={`/empleados/${empleado.businessEntityId}/traslado`}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Registrar traslado
+              </Link>
+              <Link
+                href={`/empleados/${empleado.businessEntityId}/salario`}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Registrar cambio salarial
+              </Link>
             </p>
           </div>
 

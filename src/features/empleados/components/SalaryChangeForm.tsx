@@ -83,6 +83,7 @@ export function SalaryChangeForm({
     if (resultado.success) {
       toast.success("Cambio salarial registrado.");
       router.push(ficha);
+      router.refresh();
 
       return;
     }

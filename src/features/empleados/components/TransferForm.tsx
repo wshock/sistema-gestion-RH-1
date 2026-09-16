@@ -90,6 +90,7 @@ export function TransferForm({
     if (resultado.success) {
       toast.success("Traslado registrado.");
       router.push(ficha);
+      router.refresh();
 
       return;
     }

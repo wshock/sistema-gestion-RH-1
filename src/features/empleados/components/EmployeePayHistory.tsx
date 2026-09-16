@@ -1,4 +1,5 @@
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   formatInstantDate,
@@ -10,17 +11,35 @@ import type { EmployeePayRecord } from "@/features/empleados/types";
 /**
  * Historial salarial completo.
  *
- * Cada fila es un cambio registrado: no se actualiza, se acumula. El servicio
- * entrega el arreglo ya ordenado de más reciente a más antiguo.
+ * Cada fila es un cambio registrado: no se actualiza, se acumula. El vigente
+ * es el de fecha más reciente (`currentPay`); se etiqueta igual que la
+ * asignación abierta para poder comprobar un cambio recién registrado.
+ * El orden descendente lo resuelve el servicio.
  */
 
-export function EmployeePayHistory({ history }: { history: EmployeePayRecord[] }) {
+function esVigente(
+  registro: EmployeePayRecord,
+  vigente: EmployeePayRecord | null,
+): boolean {
+  return (
+    vigente !== null &&
+    registro.rateChangeDate.getTime() === vigente.rateChangeDate.getTime()
+  );
+}
+
+export function EmployeePayHistory({
+  history,
+  vigente,
+}: {
+  history: EmployeePayRecord[];
+  vigente: EmployeePayRecord | null;
+}) {
   const columnas: DataTableColumn<EmployeePayRecord>[] = [
     {
       id: "rate",
       header: "Tarifa",
       cell: (registro) => (
-        <span className="font-medium">
+        <span className={esVigente(registro, vigente) ? "font-medium" : undefined}>
           {formatPayRate(registro.rate)}
           <span className="text-muted-foreground font-normal"> / hora</span>
         </span>
@@ -38,6 +57,16 @@ export function EmployeePayHistory({ history }: { history: EmployeePayRecord[] }
       className: "text-muted-foreground",
       cell: (registro) => formatInstantDate(registro.rateChangeDate),
     },
+    {
+      id: "estado",
+      header: "Estado",
+      cell: (registro) =>
+        esVigente(registro, vigente) ? (
+          <Badge variant="secondary">Vigente</Badge>
+        ) : (
+          <Badge variant="outline">Anterior</Badge>
+        ),
+    },
   ];
 
   return (
@@ -52,6 +81,9 @@ export function EmployeePayHistory({ history }: { history: EmployeePayRecord[] }
           columnas={columnas}
           filas={history}
           idDeFila={(registro) => registro.rateChangeDate.toISOString()}
+          claseDeFila={(registro) =>
+            esVigente(registro, vigente) ? undefined : "text-muted-foreground"
+          }
           vacio="Este empleado no tiene historial salarial."
         />
       </CardContent>
