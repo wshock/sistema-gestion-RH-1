@@ -50,8 +50,8 @@ export default async function AntiguedadReportPage({
             Antigüedad del personal
           </h2>
           <p className="text-muted-foreground text-sm">
-            Empleados activos ordenados por fecha de contratación. Los años se
-            calculan a la fecha de hoy a partir de esa fecha real.
+            Empleados activos ordenados por fecha de contratación. Los años se calculan a
+            la fecha de hoy a partir de esa fecha real.
           </p>
         </div>
       </div>

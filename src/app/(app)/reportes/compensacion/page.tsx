@@ -37,9 +37,9 @@ export default async function CompensacionReportPage() {
             Salario promedio por departamento
           </h2>
           <p className="text-muted-foreground text-sm">
-            Tarifa horaria vigente de empleados activos, agrupada por su
-            asignación actual. El promedio, el mínimo y el máximo excluyen a
-            quienes aún no tienen historial salarial.
+            Tarifa horaria vigente de empleados activos, agrupada por su asignación
+            actual. El promedio, el mínimo y el máximo excluyen a quienes aún no tienen
+            historial salarial.
           </p>
         </div>
       </div>

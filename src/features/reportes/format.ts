@@ -33,3 +33,24 @@ export function formatCalendarDate(iso: string): string {
 export function formatYearsOfService(years: number): string {
   return years === 1 ? "1 año" : `${years} años`;
 }
+
+const formatoPorcentaje = new Intl.NumberFormat("es-CO", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+/** `12.345` → `"12,3 %"`. */
+export function formatPercentage(value: number): string {
+  return `${formatoPorcentaje.format(value)} %`;
+}
+
+/** `"23:00"`, `"07:00"` → `"23:00 – 07:00 (+1 día)"`. */
+export function formatShiftSchedule(
+  startTime: string,
+  endTime: string,
+  crossesMidnight: boolean,
+): string {
+  const rango = `${startTime} – ${endTime}`;
+
+  return crossesMidnight ? `${rango} (+1 día)` : rango;
+}

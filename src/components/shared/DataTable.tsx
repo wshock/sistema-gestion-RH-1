@@ -4,6 +4,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -41,6 +42,7 @@ export function DataTable<T>({
   error,
   vacio = "No hay registros para mostrar.",
   filasDeCarga = 5,
+  pie,
 }: {
   columnas: DataTableColumn<T>[];
   filas: T[];
@@ -54,7 +56,11 @@ export function DataTable<T>({
   /** Mensaje cuando la consulta no devolvió filas. */
   vacio?: React.ReactNode;
   filasDeCarga?: number;
+  /** Fila de totales; solo se pinta cuando hay datos. */
+  pie?: React.ReactNode;
 }) {
+  const mostrarPie = pie !== undefined && !error && !cargando && filas.length > 0;
+
   return (
     <Table>
       <TableHeader>
@@ -78,6 +84,7 @@ export function DataTable<T>({
           filasDeCarga={filasDeCarga}
         />
       </TableBody>
+      {mostrarPie && <TableFooter>{pie}</TableFooter>}
     </Table>
   );
 }

@@ -36,12 +36,7 @@ export type AverageSalaryByDepartmentRow = {
  * antiguas de AdventureWorks caen sobre todo en los tramos altos: es el
  * comportamiento esperado.
  */
-export type SeniorityBracketId =
-  | "lt5"
-  | "y5to9"
-  | "y10to14"
-  | "y15to19"
-  | "y20plus";
+export type SeniorityBracketId = "lt5" | "y5to9" | "y10to14" | "y15to19" | "y20plus";
 
 /** Resumen de cuántos empleados activos caen en un tramo. */
 export type SeniorityBracketRow = {
@@ -60,4 +55,44 @@ export type SeniorityEmployeeRow = {
   hireDate: string;
   /** Años cumplidos desde `hireDate` hasta hoy. */
   yearsOfService: number;
+};
+
+/** Totales generales del panel de `/reportes`. */
+export type ReportTotals = {
+  activeEmployees: number;
+  departments: number;
+  pendingCandidates: number;
+};
+
+export type HeadcountByDepartmentRow = {
+  departmentId: number;
+  name: string;
+  groupName: string;
+  employeeCount: number;
+  /** Sobre el total de empleados activos, incluidos los sin asignación vigente. */
+  percentage: number;
+};
+
+export type HeadcountByShiftRow = {
+  shiftId: number;
+  name: string;
+  /** `HH:MM` en 24 h. */
+  startTime: string;
+  /** `HH:MM` en 24 h. */
+  endTime: string;
+  crossesMidnight: boolean;
+  employeeCount: number;
+  percentage: number;
+};
+
+/**
+ * Reporte de plantilla agrupado por departamento o turno.
+ *
+ * Los activos sin asignación vigente no se reparten en ningún grupo: van en
+ * `unassigned` y sí cuentan en `total`, así la suma de filas + `unassigned` = `total`.
+ */
+export type HeadcountReport<Row> = {
+  rows: Row[];
+  unassigned: { employeeCount: number; percentage: number };
+  total: number;
 };
