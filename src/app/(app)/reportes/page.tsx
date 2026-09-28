@@ -1,6 +1,12 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRightIcon, CalendarRangeIcon, DollarSignIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  CalendarRangeIcon,
+  DollarSignIcon,
+  UsersRoundIcon,
+} from "lucide-react";
 
 import {
   Card,
@@ -9,11 +15,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getReportTotalsAction } from "@/features/reportes/actions/summary";
+import {
+  ReportTotalsPanel,
+  ReportTotalsPanelSkeleton,
+} from "@/features/reportes/components/ReportTotalsPanel";
 import { requireSessionUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Reportes" };
 
 const REPORTES = [
+  {
+    href: "/reportes/plantilla",
+    title: "Plantilla",
+    description:
+      "Empleados activos por departamento y por turno, según la asignación vigente de cada uno.",
+    icon: UsersRoundIcon,
+  },
   {
     href: "/reportes/compensacion",
     title: "Compensación",
@@ -30,21 +48,33 @@ const REPORTES = [
   },
 ] as const;
 
+async function TotalesGenerales() {
+  const resultado = await getReportTotalsAction();
+
+  return resultado.success ? (
+    <ReportTotalsPanel totales={resultado.data} />
+  ) : (
+    <ReportTotalsPanel totales={null} error={resultado.error.message} />
+  );
+}
+
 export default async function ReportesPage() {
   await requireSessionUser();
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
-          Reportes
-        </h2>
+        <h2 className="font-heading text-2xl font-semibold tracking-tight">Reportes</h2>
         <p className="text-muted-foreground text-sm">
           Consultas de gestión sobre los datos reales de AdventureWorks.
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Suspense fallback={<ReportTotalsPanelSkeleton />}>
+        <TotalesGenerales />
+      </Suspense>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {REPORTES.map(({ href, title, description, icon: Icon }) => (
           <Link
             key={href}

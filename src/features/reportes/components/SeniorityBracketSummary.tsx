@@ -25,9 +25,7 @@ export function SeniorityBracketSummary({
       id: "employeeCount",
       header: "Empleados",
       className: "text-right",
-      cell: (fila) => (
-        <span className="tabular-nums">{fila.employeeCount}</span>
-      ),
+      cell: (fila) => <span className="tabular-nums">{fila.employeeCount}</span>,
     },
   ];
 

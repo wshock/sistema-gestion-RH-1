@@ -12,13 +12,7 @@ import {
  * Esqueleto de carga del reporte de antigüedad.
  */
 
-function TablaEsqueleto({
-  columnas,
-  filas,
-}: {
-  columnas: string[];
-  filas: number;
-}) {
+function TablaEsqueleto({ columnas, filas }: { columnas: string[]; filas: number }) {
   return (
     <Table>
       <TableHeader>
