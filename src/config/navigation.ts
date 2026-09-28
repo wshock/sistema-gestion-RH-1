@@ -33,5 +33,5 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/empleados", label: "Empleados", icon: Users, disponible: true },
   { href: "/candidatos", label: "Candidatos", icon: UserRoundSearch, disponible: true },
   { href: "/procesos", label: "Procesos", icon: Workflow, disponible: true },
-  { href: "/reportes", label: "Reportes", icon: FileBarChart, disponible: false },
+  { href: "/reportes", label: "Reportes", icon: FileBarChart, disponible: true },
 ];
