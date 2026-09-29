@@ -35,12 +35,33 @@ export function formatYearsOfService(years: number): string {
 }
 
 const formatoPorcentaje = new Intl.NumberFormat("es-CO", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const formatoTasa = new Intl.NumberFormat("es-CO", {
   style: "percent",
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 });
 
+/** `12.345` → `"12,3 %"`. */
+export function formatPercentage(value: number): string {
+  return `${formatoPorcentaje.format(value)} %`;
+}
+
 /** Tasa 0–100 → porcentaje legible (p. ej. `42,5 %`). */
 export function formatConversionRate(rate: number): string {
-  return formatoPorcentaje.format(rate / 100);
+  return formatoTasa.format(rate / 100);
+}
+
+/** `"23:00"`, `"07:00"` → `"23:00 – 07:00 (+1 día)"`. */
+export function formatShiftSchedule(
+  startTime: string,
+  endTime: string,
+  crossesMidnight: boolean,
+): string {
+  const rango = `${startTime} – ${endTime}`;
+
+  return crossesMidnight ? `${rango} (+1 día)` : rango;
 }

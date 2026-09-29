@@ -37,9 +37,18 @@ export default async function CandidatoPage({
     }
 
     return (
-      <p className="text-destructive text-sm" role="alert">
-        {resultado.error.message}
-      </p>
+      <div className="space-y-4">
+        <Link
+          href="/candidatos"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
+        >
+          <ArrowLeftIcon className="size-4" />
+          Volver al listado
+        </Link>
+        <p className="text-destructive text-sm" role="alert">
+          {resultado.error.message}
+        </p>
+      </div>
     );
   }
 
@@ -75,7 +84,7 @@ export default async function CandidatoPage({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant={candidato.status === "contratado" ? "secondary" : "outline"}>
             {candidato.status === "contratado" ? "Contratado" : "Pendiente"}
           </Badge>

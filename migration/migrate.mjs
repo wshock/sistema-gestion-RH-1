@@ -125,4 +125,33 @@ if (sequencesResult.status !== 0) {
   process.exit(sequencesResult.status ?? 1);
 }
 
+// 5. Nombre y apellido propios del candidato (la app los requiere)
+console.log(
+  "==> Agregando columnas de nombre a jobcandidate (add_jobcandidate_name_columns.sql)...",
+);
+const candidateNamesResult = spawnSync(
+  "docker",
+  [
+    "run",
+    "--rm",
+    "--platform",
+    "linux/amd64",
+    "-v",
+    `${__dirname}:/migration`,
+    "postgres:16",
+    "psql",
+    PG_URI,
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-f",
+    "/migration/add_jobcandidate_name_columns.sql",
+  ],
+  { stdio: "inherit" },
+);
+
+if (candidateNamesResult.status !== 0) {
+  console.error("Falló el agregado de columnas de nombre a jobcandidate.");
+  process.exit(candidateNamesResult.status ?? 1);
+}
+
 console.log("==> Migración completa.");

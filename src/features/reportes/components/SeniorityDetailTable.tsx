@@ -1,10 +1,7 @@
 import Link from "next/link";
 
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import {
-  formatCalendarDate,
-  formatYearsOfService,
-} from "@/features/reportes/format";
+import { formatCalendarDate, formatYearsOfService } from "@/features/reportes/format";
 import type { SeniorityEmployeeRow } from "@/features/reportes/types";
 
 /**
@@ -51,7 +48,7 @@ export function SeniorityDetailTable({
       header: "Antigüedad",
       className: "text-right",
       cell: (fila) => (
-        <span className="tabular-nums font-medium">
+        <span className="font-medium tabular-nums">
           {formatYearsOfService(fila.yearsOfService)}
         </span>
       ),

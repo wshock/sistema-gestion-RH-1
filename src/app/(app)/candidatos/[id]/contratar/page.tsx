@@ -58,6 +58,16 @@ export default async function ContratarCandidatoPage({
 
   const candidato = resultado.data;
 
+  // Se avisa antes del formulario: la contratación lo rechazaría recién al enviar.
+  if (!candidato.firstName || !candidato.lastName) {
+    return (
+      <MensajeDeAcceso
+        mensaje="Este candidato no tiene nombre y apellido registrados. Editalo para completarlos antes de contratarlo."
+        volverA={`/candidatos/${candidato.jobCandidateId}`}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Link
