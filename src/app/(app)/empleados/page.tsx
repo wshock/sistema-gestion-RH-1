@@ -70,24 +70,25 @@ export default async function EmpleadosPage({
     {
       id: "nationalIdNumber",
       header: "Documento",
-      className: "text-muted-foreground",
+      className: "text-muted-foreground hidden md:table-cell",
       cell: (empleado) => empleado.nationalIdNumber,
     },
     {
       id: "jobTitle",
       header: "Cargo",
+      className: "hidden lg:table-cell",
       cell: (empleado) => empleado.jobTitle,
     },
     {
       id: "departmentName",
       header: "Departamento",
-      className: "text-muted-foreground",
+      className: "text-muted-foreground hidden sm:table-cell",
       cell: (empleado) => empleado.departmentName ?? "Sin asignación vigente",
     },
     {
       id: "shiftName",
       header: "Turno",
-      className: "text-muted-foreground hidden sm:table-cell",
+      className: "text-muted-foreground hidden lg:table-cell",
       cell: (empleado) => empleado.shiftName ?? "Sin asignación vigente",
     },
     {

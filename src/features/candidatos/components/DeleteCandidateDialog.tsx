@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { deleteCandidateAction } from "@/features/candidatos/actions/candidate";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { redirectIfSessionExpired } from "@/lib/sessionExpired";
 
 export function DeleteCandidateDialog({
   jobCandidateId,
@@ -38,6 +39,10 @@ export function DeleteCandidateDialog({
           onEliminado?.();
 
           return true;
+        }
+
+        if (redirectIfSessionExpired(resultado.error)) {
+          return false;
         }
 
         // Aquí aparece la regla de negocio: si el candidato ya fue contratado,

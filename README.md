@@ -4,7 +4,7 @@ Aplicación web para administrar la información de personal de **AdventureWorks
 
 Proyecto académico. Equipo de 2 desarrolladores. Agosto – septiembre de 2026.
 
-**URL de producción:** _pendiente de primer despliegue_ — se actualizará aquí en cuanto el proyecto quede desplegado en Vercel.
+**URL de producción:** <URL_DE_VERCEL> · **Manual de instalación:** [docs/manual-instalacion.md](./docs/manual-instalacion.md)
 
 ---
 
@@ -143,57 +143,18 @@ Desde la entrega 2 el código se agrupa por módulo de dominio en `src/features/
 
 ## Puesta en marcha
 
-> **El equipo comparte una única base en Supabase**, ya migrada y con el
-> usuario administrador creado. Si te estás incorporando al proyecto,
-> **no vuelvas a correr `migration/migrate.mjs` ni `npm run seed`**: eso
-> ya se hizo una vez contra esa base. Pedile a un integrante del equipo
-> la cadena de conexión real (`DATABASE_URL`) por un canal seguro —nunca
-> por git ni por chat en texto plano, `.env` está en `.gitignore` a
-> propósito— y usá los pasos 1, 2 y 4 de abajo. Los pasos 3 y 5 son solo
-> para levantar una base nueva desde cero (por ejemplo, en un entorno de
-> pruebas separado).
+El procedimiento completo —requisitos, variables de entorno, migración de AdventureWorks desde cero, usuario inicial, verificación y problemas frecuentes— está en el **[manual de instalación](./docs/manual-instalacion.md)**. La migración se detalla en [`migration/docs/migration.md`](./migration/docs/migration.md).
+
+Resumen para quien ya tiene la cadena de conexión a una base migrada:
 
 ```bash
-# 1. Dependencias (dispara `prisma generate` vía postinstall)
 npm install
-
-# 2. Variables de entorno
-cp .env.example .env
-# DATABASE_URL: pedir la cadena de conexión real de Supabase a otro
-# integrante del equipo. No inventar una conexión local: es una base
-# compartida, ya migrada.
-#
-# AUTH_SECRET: cada desarrollador genera el suyo, no necesita coincidir
-# con el de nadie más porque solo firma las cookies de su propio
-# servidor local. No puede quedar vacío o Auth.js responde 500
-# (MissingSecret) en todo el flujo de sesión:
-#   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-# Si se cambia una variable con el servidor levantado, hay que reiniciarlo y
-# borrar .next: Turbopack cachea el valor anterior en los chunks compilados.
-#
-# SEED_ADMIN_*: no hace falta completarlos con datos reales si no vas a
-# correr `npm run seed` (el admin ya existe en la base compartida).
-
-# 3. [Solo para una base nueva, no para unirse a la compartida] Migrar
-#    los datos de AdventureWorks a PostgreSQL
-export MSSQL_URI="mssql://usuario:password@host:1433/AdventureWorks2022"
-export PG_URI="postgresql://usuario:password@host:5432/postgres"
-node migration/migrate.mjs
-# (Ver docs/migration.md para más detalles)
-
-# 4. Aplicar migraciones de Prisma pendientes (seguro incluso si ya están
-#    todas aplicadas: Prisma lleva el registro en `_prisma_migrations` y
-#    no repite las que ya corrieron)
+cp .env.example .env          # completar DATABASE_URL y AUTH_SECRET
 npx prisma migrate deploy
-
-# 5. [Solo para una base nueva] Crear el usuario administrador inicial
-npm run seed
-
-# 6. Levantar
-npm run dev
+npm run dev                   # http://localhost:3000/login
 ```
 
-Los pasos 3-5 son independientes entre sí: la migración de Prisma solo crea el esquema `app`, nunca toca las tablas de AdventureWorks (ver [`src/data/README.md`](./src/data/README.md)). Ya con el usuario creado, el acceso es por `/login`.
+> **El equipo comparte una única base en Supabase**, ya migrada y con el usuario administrador creado: no vuelvas a correr `migration/migrate.mjs` ni `npm run seed` contra ella. La cadena de conexión se pide por un canal seguro; `.env` está en `.gitignore` a propósito.
 
 ---
 

@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 
+/** Hay cookie pero ya no es válida: el login lo avisa y el proxy no rebota a `/inicio`. */
+export const MOTIVO_SESION_EXPIRADA = "sesion-expirada";
+
 export type SessionUser = {
   id: string;
   name: string;
@@ -37,7 +40,7 @@ export async function requireSessionUser(): Promise<SessionUser> {
   const user = await getSessionUser();
 
   if (!user) {
-    redirect("/login");
+    redirect(`/login?motivo=${MOTIVO_SESION_EXPIRADA}`);
   }
 
   return user;

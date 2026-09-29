@@ -22,7 +22,7 @@ export function CandidateDetailActions({ candidato }: { candidato: CandidateDeta
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button
         size="sm"
         render={<Link href={`/candidatos/${candidato.jobCandidateId}/contratar`} />}
