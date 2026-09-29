@@ -10,6 +10,7 @@ import { EmployeePersonJobFields } from "@/features/empleados/components/Employe
 import { Button } from "@/components/ui/button";
 import { employeeEditSchema, type EmployeeEditInput } from "@/features/empleados/schemas";
 import type { EmployeeDetail } from "@/features/empleados/types";
+import { redirectIfSessionExpired } from "@/lib/sessionExpired";
 
 /**
  * Formulario de edición de empleado.
@@ -60,6 +61,10 @@ export function EmployeeEditForm({ empleado }: { empleado: EmployeeDetail }) {
     }
 
     const { error } = resultado;
+
+    if (redirectIfSessionExpired(error)) {
+      return;
+    }
 
     if (error.fieldErrors) {
       for (const [campo, mensajes] of Object.entries(error.fieldErrors)) {

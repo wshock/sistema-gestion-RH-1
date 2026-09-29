@@ -31,6 +31,7 @@ import {
   type EmployeeCreateInput,
   type EmployeeEditInput,
 } from "@/features/empleados/schemas";
+import { redirectIfSessionExpired } from "@/lib/sessionExpired";
 
 type DepartmentOption = { departmentId: number; name: string };
 type ShiftOption = { shiftId: number; name: string };
@@ -93,6 +94,10 @@ export function EmployeeForm({
     }
 
     const { error } = resultado;
+
+    if (redirectIfSessionExpired(error)) {
+      return;
+    }
 
     if (error.fieldErrors) {
       for (const [campo, mensajes] of Object.entries(error.fieldErrors)) {

@@ -64,9 +64,18 @@ export default async function EmpleadoPage({
     }
 
     return (
-      <p className="text-destructive text-sm" role="alert">
-        {resultado.error.message}
-      </p>
+      <div className="space-y-4">
+        <Link
+          href="/empleados"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
+        >
+          <ArrowLeftIcon className="size-4" />
+          Volver al listado
+        </Link>
+        <p className="text-destructive text-sm" role="alert">
+          {resultado.error.message}
+        </p>
+      </div>
     );
   }
 
