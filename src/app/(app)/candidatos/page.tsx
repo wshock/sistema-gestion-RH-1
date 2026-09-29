@@ -66,7 +66,7 @@ export default async function CandidatosPage({
         <div className="flex items-center justify-end gap-3">
           <Link
             href={`/candidatos/${candidato.jobCandidateId}`}
-            className="text-muted-foreground hover:text-foreground text-sm whitespace-nowrap"
+            className="text-muted-foreground hover:text-foreground hidden text-sm whitespace-nowrap sm:inline"
           >
             Ver currículum
           </Link>
@@ -74,9 +74,10 @@ export default async function CandidatosPage({
           {candidato.businessEntityId !== null && (
             <Link
               href={`/empleados/${candidato.businessEntityId}`}
+              aria-label="Ver empleado"
               className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm whitespace-nowrap"
             >
-              Ver empleado
+              <span className="hidden sm:inline">Ver empleado</span>
               <ArrowUpRightIcon className="size-3.5" />
             </Link>
           )}

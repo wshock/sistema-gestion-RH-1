@@ -9,7 +9,7 @@
 -- plano —sin ninguna etiqueta— no tenía de dónde sacarlo, y la contratación
 -- (HU-30) lo rechazaba sin una manera clara de corregirlo.
 --
--- Se ejecuta manualmente porque `humanresources.jobcandidate` es una tabla
+-- Lo corre `migrate.mjs` (paso 5), no Prisma, porque `humanresources.jobcandidate` es una tabla
 -- externa a Prisma Migrate (ver `tables.external` en `prisma.config.ts`):
 -- la carga pgloader, no las migraciones de Prisma. Nullable, no `NOT NULL`:
 -- igual que el resto de lo migrado desde AdventureWorks, la barrera real es
@@ -39,3 +39,15 @@ BEGIN
         ALTER TABLE humanresources.jobcandidate ADD COLUMN lastname text;
     END IF;
 END $$;
+
+-- Backfill de los candidatos migrados: toma el nombre del XML del currículum.
+-- Solo completa valores NULL, así que no pisa lo editado desde la aplicación.
+UPDATE humanresources.jobcandidate
+SET firstname = btrim(substring(resume from '<ns:Name\.First>([^<]*)</ns:Name\.First>'))
+WHERE firstname IS NULL
+  AND resume ~ '<ns:Name\.First>';
+
+UPDATE humanresources.jobcandidate
+SET lastname = btrim(substring(resume from '<ns:Name\.Last>([^<]*)</ns:Name\.Last>'))
+WHERE lastname IS NULL
+  AND resume ~ '<ns:Name\.Last>';

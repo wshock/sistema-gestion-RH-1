@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Building2, ShieldCheckIcon, UsersIcon, Workflow } from "lucide-react";
+import {
+  Building2,
+  ClockAlertIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+  Workflow,
+} from "lucide-react";
 
 import { LoginForm } from "@/components/auth/LoginForm";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -10,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { MOTIVO_SESION_EXPIRADA } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Iniciar sesión" };
 
@@ -35,9 +42,9 @@ const CAPACIDADES = [
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ redirectTo?: string }>;
+  searchParams: Promise<{ redirectTo?: string; motivo?: string }>;
 }) {
-  const { redirectTo } = await searchParams;
+  const { redirectTo, motivo } = await searchParams;
 
   return (
     <div className="bg-background relative min-h-dvh lg:grid lg:grid-cols-2">
@@ -99,6 +106,16 @@ export default async function LoginPage({
           <p className="font-heading text-center text-lg font-semibold tracking-tight lg:hidden">
             People<span className="text-muted-foreground">Flow</span>
           </p>
+
+          {motivo === MOTIVO_SESION_EXPIRADA && (
+            <p
+              role="status"
+              className="border-border/60 bg-card/70 flex items-start gap-2 rounded-lg border p-3 text-sm backdrop-blur-xl"
+            >
+              <ClockAlertIcon className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+              Tu sesión expiró. Iniciá sesión de nuevo para continuar donde estabas.
+            </p>
+          )}
 
           <Card className="bg-card/70 backdrop-blur-xl">
             <CardHeader>

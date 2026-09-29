@@ -44,6 +44,7 @@ migration/
 ├── adventureworks.load            # generado en cada corrida, con credenciales reales (ignorado por git)
 ├── post_migration_constraints.sql # crea las primary/foreign keys post-carga (versionado)
 ├── reset_sequences.sql            # ajusta y verifica las secuencias autoincrementales (versionado)
+├── add_jobcandidate_name_columns.sql # nombre y apellido propios del candidato (versionado)
 ├── migrate.mjs                    # orquesta todo el proceso (versionado)
 └── .gitignore                     # excluye adventureworks.load del repo
 ```
@@ -61,6 +62,12 @@ export PG_URI="postgresql://usuario:password@host:5432/postgres"
 node migration/migrate.mjs
 ```
 
+`pgloader` y `psql` corren dentro de contenedores, donde `localhost` apunta al
+propio contenedor: si SQL Server o PostgreSQL corren en el equipo (o en otro
+contenedor con el puerto publicado), usar `host.docker.internal` como host en
+ambas URIs. El manual completo, incluido cómo levantar un SQL Server con
+AdventureWorks, está en [`docs/manual-instalacion.md`](../../docs/manual-instalacion.md).
+
 El script hace, en orden:
 
 1. Genera `adventureworks.load` a partir del template, con las URIs reales.
@@ -73,10 +80,19 @@ El script hace, en orden:
    el cliente `psql`, para ajustar las secuencias autoincrementales al
    máximo id migrado y verificar el ajuste con un insert/delete de prueba
    por tabla (ver [Ajuste de secuencias autoincrementales](#ajuste-de-secuencias-autoincrementales)).
+5. Corre `add_jobcandidate_name_columns.sql`, que agrega `firstname` y
+   `lastname` a `humanresources.jobcandidate` y los completa desde el XML del
+   currículum de los 13 candidatos migrados. La aplicación los requiere: sin
+   este paso el módulo de candidatos falla y la contratación no es posible.
 
 Es seguro volver a correrlo: la carga (`include no drop`), el script de
-constraints (chequeos `IF NOT EXISTS`) y el ajuste de secuencias son
-idempotentes frente a una base ya migrada.
+constraints (chequeos `IF NOT EXISTS`), el ajuste de secuencias y las columnas
+de nombre (solo completa valores `NULL`) son idempotentes frente a una base ya
+migrada.
+
+Después de migrar, la aplicación necesita su propio esquema:
+`npx prisma migrate deploy` crea `app.appuser` y habilita `unaccent`, y
+`npm run seed` crea el administrador inicial.
 
 ## Por qué las constraints se crean en un paso aparte
 
@@ -186,7 +202,17 @@ WHERE schema_name IN ('sales', 'production');
 
 Debe devolver 0 filas.
 
-Conteos esperados por tabla:
+Confirmar que los 13 candidatos migrados tienen nombre:
+
+```sql
+SELECT count(*) FROM humanresources.jobcandidate
+WHERE firstname IS NULL OR lastname IS NULL;
+```
+
+Debe devolver 0.
+
+Conteos esperados por tabla tras una migración recién hecha (la base de
+producción tiene más filas por lo registrado desde la aplicación):
 
 | Tabla                                      | Filas  |
 | ------------------------------------------ | ------ |

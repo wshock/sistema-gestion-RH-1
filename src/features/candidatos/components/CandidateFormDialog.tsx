@@ -13,6 +13,7 @@ import { FormDialog } from "@/components/shared/FormDialog";
 import { FormField } from "@/components/shared/FormField";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { redirectIfSessionExpired } from "@/lib/sessionExpired";
 import { formatearCurriculumComoTexto } from "@/features/candidatos/resume";
 import { candidateInputSchema, type CandidateInput } from "@/features/candidatos/schemas";
 
@@ -77,6 +78,10 @@ export function CandidateFormDialog({
     // Los errores por campo se pintan junto al input que los provocó; el resto
     // llega como aviso general.
     const { error } = resultado;
+
+    if (redirectIfSessionExpired(error)) {
+      return;
+    }
 
     if (error.fieldErrors) {
       for (const [campo, mensajes] of Object.entries(error.fieldErrors)) {

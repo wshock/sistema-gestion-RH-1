@@ -6,6 +6,7 @@ import { UserCheckIcon, UserXIcon } from "lucide-react";
 import { setEmployeeStatusAction } from "@/features/empleados/actions/employee";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { redirectIfSessionExpired } from "@/lib/sessionExpired";
 
 /**
  * Baja lógica y reactivación, usable desde la ficha (botón con rótulo) o
@@ -64,6 +65,10 @@ export function EmployeeStatusAction({
           );
 
           return true;
+        }
+
+        if (redirectIfSessionExpired(resultado.error)) {
+          return false;
         }
 
         toast.error(resultado.error.message);

@@ -27,7 +27,10 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const tieneSesion = COOKIES_DE_SESION.some((nombre) => request.cookies.has(nombre));
 
-  if (coincide(pathname, RUTAS_DE_ESTADO)) {
+  // Las Server Actions validan sesión por su cuenta y responden NO_AUTORIZADO; redirigirlas rompe esa respuesta.
+  const esServerAction = request.method === "POST" && request.headers.has("next-action");
+
+  if (esServerAction || coincide(pathname, RUTAS_DE_ESTADO)) {
     return NextResponse.next();
   }
 
@@ -41,7 +44,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(destino);
   }
 
-  if (tieneSesion && esRutaDeAcceso) {
+  // Con cookie vencida o inválida hay que dejar ver el login, o rebotaría a /inicio en bucle.
+  const sesionExpirada = request.nextUrl.searchParams.get("motivo") === "sesion-expirada";
+
+  if (tieneSesion && esRutaDeAcceso && !sesionExpirada) {
     return NextResponse.redirect(new URL("/inicio", request.nextUrl));
   }
 
