@@ -33,3 +33,14 @@ export function formatCalendarDate(iso: string): string {
 export function formatYearsOfService(years: number): string {
   return years === 1 ? "1 año" : `${years} años`;
 }
+
+const formatoPorcentaje = new Intl.NumberFormat("es-CO", {
+  style: "percent",
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+/** Tasa 0–100 → porcentaje legible (p. ej. `42,5 %`). */
+export function formatConversionRate(rate: number): string {
+  return formatoPorcentaje.format(rate / 100);
+}

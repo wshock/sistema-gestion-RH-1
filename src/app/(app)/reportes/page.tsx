@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRightIcon, CalendarRangeIcon, DollarSignIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  CalendarRangeIcon,
+  DollarSignIcon,
+  UserRoundSearchIcon,
+} from "lucide-react";
 
 import {
   Card,
@@ -27,6 +32,13 @@ const REPORTES = [
     description:
       "Distribución por tramos y listado de empleados activos ordenados por fecha de contratación.",
     icon: CalendarRangeIcon,
+  },
+  {
+    href: "/reportes/candidatos",
+    title: "Candidatos",
+    description:
+      "Pendientes frente a contratados y tasa de conversión del proceso de selección.",
+    icon: UserRoundSearchIcon,
   },
 ] as const;
 
