@@ -4,7 +4,7 @@ Aplicación web para administrar la información de personal de **AdventureWorks
 
 Proyecto académico. Equipo de 2 desarrolladores. Agosto – septiembre de 2026.
 
-**URL de producción:** <URL_DE_VERCEL> · **Manual de instalación:** [docs/manual-instalacion.md](./docs/manual-instalacion.md)
+**URL de producción:** <URL_DE_VERCEL> · **Manual de instalación:** [docs/manual-instalacion.md](./docs/manual-instalacion.md) · **Documentación técnica:** [docs/documentacion-tecnica.md](./docs/documentacion-tecnica.md) · **Índice de docs:** [docs/README.md](./docs/README.md)
 
 ---
 
@@ -126,7 +126,7 @@ Datos           Cliente de Prisma. Nadie más consulta la BD.
 - La validación de servidor es obligatoria, independiente de la de cliente.
 - Los registros de historial se insertan, nunca se actualizan ni se borran.
 
-Desde la entrega 2 el código se agrupa por módulo de dominio en `src/features/`. Las convenciones están en [CONVENTIONS.md](./CONVENTIONS.md); los acuerdos de reparto de un módulo entre ambos desarrolladores, en [`docs/`](./docs).
+Desde la entrega 2 el código se agrupa por módulo de dominio en `src/features/`. Las convenciones están en [CONVENTIONS.md](./CONVENTIONS.md); la justificación de diseño, en [docs/documentacion-tecnica.md](./docs/documentacion-tecnica.md); el índice de toda la documentación, en [`docs/`](./docs).
 
 ---
 
