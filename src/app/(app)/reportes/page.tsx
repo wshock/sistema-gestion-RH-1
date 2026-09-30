@@ -5,6 +5,7 @@ import {
   ArrowRightIcon,
   CalendarRangeIcon,
   DollarSignIcon,
+  UserRoundSearchIcon,
   UsersRoundIcon,
 } from "lucide-react";
 
@@ -46,6 +47,13 @@ const REPORTES = [
       "Distribución por tramos y listado de empleados activos ordenados por fecha de contratación.",
     icon: CalendarRangeIcon,
   },
+  {
+    href: "/reportes/candidatos",
+    title: "Candidatos",
+    description:
+      "Pendientes frente a contratados y tasa de conversión del proceso de selección.",
+    icon: UserRoundSearchIcon,
+  },
 ] as const;
 
 async function TotalesGenerales() {
@@ -74,7 +82,7 @@ export default async function ReportesPage() {
         <TotalesGenerales />
       </Suspense>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {REPORTES.map(({ href, title, description, icon: Icon }) => (
           <Link
             key={href}

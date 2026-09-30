@@ -96,3 +96,18 @@ export type HeadcountReport<Row> = {
   unassigned: { employeeCount: number; percentage: number };
   total: number;
 };
+
+/**
+ * Resumen del reporte de estado de candidatos.
+ *
+ * Misma regla que el módulo de candidatos: contratado ⇔
+ * `JobCandidate.businessEntityId` no nulo. `conversionRate` es el porcentaje
+ * de contratados sobre el total; `null` si no hay candidatos registrados.
+ */
+export type CandidateStatusReport = {
+  pending: number;
+  hired: number;
+  total: number;
+  /** Porcentaje 0–100, un decimal; `null` si `total === 0`. */
+  conversionRate: number | null;
+};
