@@ -2,6 +2,7 @@
 
 - [`ead_clusters_rrhh.ipynb`](./ead_clusters_rrhh.ipynb): versión principal, resumida y explicada en lenguaje sencillo.
 - [`ead_clusters_rrhh_completo.ipynb`](./ead_clusters_rrhh_completo.ipynb): versión extendida, con pruebas estadísticas, más métricas de clustering, PCA y clustering jerárquico.
+- [`seguimiento_dendrograma_prediccion.ipynb`](./seguimiento_dendrograma_prediccion.ipynb): dendrograma de Ward sobre los mismos 5 perfiles y predicción del tipo de pago con dos algoritmos.
 
 Ambos analizan las 8 tablas de AdventureWorks que usa el SGRH (`humanresources.*` y `person.person` / `person.businessentity`): calidad de los datos, exploración de la plantilla y segmentación de empleados en perfiles con K-Means.
 
