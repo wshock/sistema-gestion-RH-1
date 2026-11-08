@@ -1,0 +1,74 @@
+-- Pegar en Power BI Desktop: Inicio → Nueva medida.
+-- Nombres de tabla = nombres de los CSV importados, sin la extensión.
+
+Empleados activos = COUNTROWS ( FactPlantilla )
+
+Empleados sin salario =
+CALCULATE (
+    COUNTROWS ( FactPlantilla ),
+    FactPlantilla[sin_historial_salarial] = TRUE ()
+)
+
+Empleados sin asignacion =
+CALCULATE (
+    COUNTROWS ( FactPlantilla ),
+    FactPlantilla[sin_asignacion] = TRUE ()
+)
+
+% sin salario =
+DIVIDE ( [Empleados sin salario], [Empleados activos] )
+
+% con asignacion =
+DIVIDE (
+    [Empleados activos] - [Empleados sin asignacion],
+    [Empleados activos]
+)
+
+Tarifa promedio = AVERAGE ( FactPlantilla[tarifa_vigente] )
+
+Tarifa minima = MIN ( FactPlantilla[tarifa_vigente] )
+
+Tarifa maxima = MAX ( FactPlantilla[tarifa_vigente] )
+
+Antiguedad promedio =
+AVERAGEX (
+    FactPlantilla,
+    RELATED ( DimEmpleado[anios_antiguedad] )
+)
+
+Traslados 12 meses =
+CALCULATE (
+    COUNTROWS ( FactAsignacion ),
+    FactAsignacion[vigente] = FALSE (),
+    FactAsignacion[fecha_fin] >= EDATE ( TODAY (), -12 )
+)
+
+Cambios salariales 12 meses =
+CALCULATE (
+    COUNTROWS ( FactSalario ),
+    FactSalario[es_cambio] = TRUE (),
+    FactSalario[fecha] >= EDATE ( TODAY (), -12 )
+)
+
+Candidatos pendientes =
+CALCULATE (
+    COUNTROWS ( FactCandidato ),
+    FactCandidato[estado] = "Pendiente"
+)
+
+Candidatos contratados =
+CALCULATE (
+    COUNTROWS ( FactCandidato ),
+    FactCandidato[estado] = "Contratado"
+)
+
+Tasa de conversion =
+DIVIDE (
+    [Candidatos contratados],
+    [Candidatos contratados] + [Candidatos pendientes]
+)
+
+-- Metas fijas para las tarjetas (formato de meta en la visual).
+Meta sin salario = 0
+Meta con asignacion = 1
+Meta conversion = 0.5

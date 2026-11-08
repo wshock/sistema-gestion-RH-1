@@ -1,0 +1,4 @@
+turno_id,turno,hora_inicio,hora_fin,cruza_medianoche
+1,Day,07:00,15:00,FALSE
+2,Evening,15:00,23:00,FALSE
+3,Night,23:00,07:00,TRUE

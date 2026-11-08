@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx prisma/seed.ts",
     "verify:hire": "tsx scripts/verify-hire-transaction.ts",
+    "bi:export": "node --env-file=.env bi/exportar.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
